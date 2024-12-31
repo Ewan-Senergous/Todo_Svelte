@@ -1,11 +1,14 @@
 import type { Config } from 'tailwindcss';
+import flowbitePlugin from 'flowbite/plugin';
 
 export default {
-	content: ['./src/**/*.{html,js,svelte,ts}'],
-
+	content: ['./src/**/*.{html,js,svelte,ts}', './node_modules/flowbite/**/*.js'],
 	theme: {
-		extend: {}
+		extend: {
+			fontFamily: {
+				sans: ['Poppins', 'sans-serif']
+			}
+		}
 	},
-
-	plugins: []
-} satisfies Config;
+	plugins: [flowbitePlugin]
+} as Config;
