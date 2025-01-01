@@ -13,40 +13,26 @@
 
 	let todos = writable<Todo[]>([]);
 
-	// Charger des données d'exemple au démarrage
-	onMount(() => {
-		const initialTodos: Todo[] = [
-			{ id: 1, title: 'Première tâche', completed: false, priority: 'medium' },
-			{ id: 2, title: 'Deuxième tâche', completed: true, priority: 'high' }
-		];
-		todos.set(initialTodos);
+	// Charger les tâches depuis l'API
+	onMount(async () => {
+		const response = await fetch('/api/todos');
+		if (response.ok) {
+			const data = await response.json();
+			todos.set(data);
+		}
 	});
 
-	// Gestion de l'ajout, de la suppression et de la modification des tâches
-	let newTodo = { title: '', description: '', priority: 'medium', dueDate: '' };
-	const addTodo = () => {
-		todos.update((current) => {
-			const id = current.length ? Math.max(...current.map((t) => t.id)) + 1 : 1;
-			const todo: Todo = {
-				id,
-				title: newTodo.title,
-				description: newTodo.description,
-				priority: newTodo.priority,
-				dueDate: newTodo.dueDate,
-				completed: false
-			};
-			return [...current, todo];
-		});
-		newTodo = { title: '', description: '', priority: 'medium', dueDate: '' };
-	};
-
-	const toggleCompletion = (id: number) => {
+	// Basculer l'état d'une tâche
+	const toggleCompletion = async (id: number) => {
+		await fetch(`/api/todos/${id}/toggle`, { method: 'PATCH' });
 		todos.update((current) =>
 			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
 		);
 	};
 
-	const deleteTodo = (id: number) => {
+	// Supprimer une tâche
+	const deleteTodo = async (id: number) => {
+		await fetch(`/api/todos/${id}`, { method: 'DELETE' });
 		todos.update((current) => current.filter((todo) => todo.id !== id));
 	};
 </script>
@@ -54,50 +40,8 @@
 <main class="container mx-auto p-6">
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
 
-	<!-- Section pour ajouter une nouvelle tâche -->
-	<section class="mb-6 rounded bg-white p-4 shadow">
-		<h2 class="mb-4 text-lg font-semibold">Ajouter une tâche</h2>
-		<form class="space-y-4" on:submit|preventDefault={addTodo}>
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-				<div>
-					<label for="title" class="block text-sm font-medium">Titre</label>
-					<input
-						type="text"
-						id="title"
-						bind:value={newTodo.title}
-						required
-						class="w-full rounded border p-2"
-					/>
-				</div>
-				<div>
-					<label for="priority" class="block text-sm font-medium">Priorité</label>
-					<select id="priority" bind:value={newTodo.priority} class="w-full rounded border p-2">
-						<option value="low">Faible</option>
-						<option value="medium">Moyenne</option>
-						<option value="high">Élevée</option>
-					</select>
-				</div>
-			</div>
-			<div>
-				<label for="description" class="block text-sm font-medium">Description</label>
-				<textarea
-					id="description"
-					bind:value={newTodo.description}
-					class="w-full rounded border p-2"
-				></textarea>
-			</div>
-			<div>
-				<label for="dueDate" class="block text-sm font-medium">Date limite</label>
-				<input
-					type="date"
-					id="dueDate"
-					bind:value={newTodo.dueDate}
-					class="w-full rounded border p-2"
-				/>
-			</div>
-			<button type="submit" class="rounded bg-blue-500 p-2 text-white">Ajouter</button>
-		</form>
-	</section>
+	<!-- Lien vers la page de création -->
+	<a href="/create" class="mb-6 inline-block rounded bg-blue-500 p-2 text-white">Créer une tâche</a>
 
 	<!-- Liste des tâches -->
 	<section class="rounded bg-white p-4 shadow">
