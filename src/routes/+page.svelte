@@ -14,6 +14,7 @@
 
 	// Store pour la liste des tâches
 	let todos = writable<Todo[]>([]);
+	let editingTodo: Todo | null = null; // Tâche en cours d'édition
 
 	// Fonction pour obtenir la date du jour au format yyyy-mm-dd
 	const getTodayDate = (): string => {
@@ -53,6 +54,14 @@
 		};
 	};
 
+	// Fonction pour modifier une tâche existante
+	const updateTodo = () => {
+		todos.update((current) =>
+			current.map((todo) => (todo.id === editingTodo?.id ? { ...editingTodo } : todo))
+		);
+		editingTodo = null; // Quitter le mode édition
+	};
+
 	// Fonction pour basculer l'état terminé/incomplet
 	const toggleCompletion = (id: number) => {
 		todos.update((current) =>
@@ -63,6 +72,11 @@
 	// Fonction pour supprimer une tâche
 	const deleteTodo = (id: number) => {
 		todos.update((current) => current.filter((todo) => todo.id !== id));
+	};
+
+	// Fonction pour activer le mode édition pour une tâche
+	const editTodo = (todo: Todo) => {
+		editingTodo = { ...todo }; // Copier la tâche sélectionnée
 	};
 
 	// Chargement initial des tâches
@@ -160,9 +174,55 @@
 							>
 								{todo.completed ? '✔️ Terminé' : '⏳ En cours'}
 							</button>
-							<button class="mr-2 text-blue-500" on:click={() => deleteTodo(todo.id)}>❌</button>
+							<button class="mr-2 text-yellow-500" on:click={() => editTodo(todo)}>✏️</button>
+							<button class="text-red-500" on:click={() => deleteTodo(todo.id)}>❌</button>
 						</div>
 					</div>
+					{#if editingTodo?.id === todo.id}
+						<!-- Formulaire pour modifier une tâche -->
+						<form class="space-y-4" on:submit|preventDefault={updateTodo}>
+							<div>
+								<label for="edit-title" class="block text-sm font-medium">Titre</label>
+								<input
+									type="text"
+									id="edit-title"
+									bind:value={editingTodo.title}
+									required
+									class="w-full rounded border p-2"
+								/>
+							</div>
+							<div>
+								<label for="edit-priority" class="block text-sm font-medium">Priorité</label>
+								<select
+									id="edit-priority"
+									bind:value={editingTodo.priority}
+									class="w-full rounded border p-2"
+								>
+									<option value="low">Faible</option>
+									<option value="medium">Moyenne</option>
+									<option value="high">Élevée</option>
+								</select>
+							</div>
+							<div>
+								<label for="edit-description" class="block text-sm font-medium">Description</label>
+								<textarea
+									id="edit-description"
+									bind:value={editingTodo.description}
+									class="w-full rounded border p-2"
+								></textarea>
+							</div>
+							<div>
+								<label for="edit-dueDate" class="block text-sm font-medium">Date limite</label>
+								<input
+									type="date"
+									id="edit-dueDate"
+									bind:value={editingTodo.dueDate}
+									class="w-full rounded border p-2"
+								/>
+							</div>
+							<button type="submit" class="rounded bg-blue-500 p-2 text-white">Enregistrer</button>
+						</form>
+					{/if}
 				</li>
 			{/each}
 		</ul>
@@ -172,5 +232,17 @@
 <style>
 	main {
 		max-width: 800px;
+	}
+
+	.bg-green-500 {
+		background-color: #22c55e; /* Vert pour faible */
+	}
+
+	.bg-orange-500 {
+		background-color: #f97316; /* Orange pour moyen */
+	}
+
+	.bg-red-500 {
+		background-color: #ef4444; /* Rouge pour élevé */
 	}
 </style>
