@@ -18,20 +18,41 @@
 	let editingTodo: Todo | null = null;
 
 	const toggleCompletion = async (id: number) => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
-		);
-
 		const todoToUpdate = $todos.find((todo) => todo.id === id);
+
 		if (todoToUpdate) {
+			// Mise à jour locale
+			todos.update((current) =>
+				current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
+			);
+
+			// Envoi de la mise à jour à l'API
 			try {
-				await fetch('/api/todos', {
+				const response = await fetch('/api/todos', {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ id, completed: !todoToUpdate.completed })
 				});
+
+				if (!response.ok) {
+					console.error('Erreur lors de la mise à jour du serveur:', await response.json());
+
+					// Revenir en arrière en cas d'échec
+					todos.update((current) =>
+						current.map((todo) =>
+							todo.id === id ? { ...todo, completed: todoToUpdate.completed } : todo
+						)
+					);
+				}
 			} catch (error) {
-				console.error('Erreur réseau lors de la mise à jour de l’état:', error);
+				console.error('Erreur réseau lors de la mise à jour:', error);
+
+				// Revenir en arrière en cas d'erreur réseau
+				todos.update((current) =>
+					current.map((todo) =>
+						todo.id === id ? { ...todo, completed: todoToUpdate.completed } : todo
+					)
+				);
 			}
 		}
 	};
@@ -98,7 +119,7 @@
 			class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
 			on:click={navigateToCreate}
 		>
-			✚ Créer une tâche
+			➕ Créer une tâche
 		</button>
 	</div>
 
@@ -136,7 +157,7 @@
 							<Button
 								on:click={() => toggleCompletion(todo.id)}
 								color={todo.completed ? 'green' : 'blue'}
-								class={`font-bold text-white`}
+								class={`font-bold text-white `}
 							>
 								{#if todo.completed}
 									<span>👍 Terminé</span>
