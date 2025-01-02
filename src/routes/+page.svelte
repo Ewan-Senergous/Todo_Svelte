@@ -123,12 +123,14 @@
 <main class="container mx-auto p-6" in:fade={{ duration: 500 }}>
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
 	<div class="mb-6 flex justify-end">
-		<button
-			class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+		<Button
+			color="green"
+			class="flex items-center space-x-2 font-bold text-white"
 			on:click={navigateToCreate}
 		>
-			➕ Créer une tâche
-		</button>
+			<span class="text-xl font-extrabold text-yellow-300">+</span>
+			<span>Créer une tâche</span>
+		</Button>
 	</div>
 
 	<section class="rounded bg-white p-4 shadow">
@@ -161,7 +163,7 @@
 								{todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
 							</p>
 						</div>
-						<div>
+						<div class="flex space-x-2">
 							<Button
 								on:click={() => toggleCompletion(todo.id)}
 								color={todo.completed ? 'green' : 'blue'}
