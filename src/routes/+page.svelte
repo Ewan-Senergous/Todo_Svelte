@@ -3,6 +3,7 @@
 	import { writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { fade, slide } from 'svelte/transition';
+	import { Button } from 'flowbite-svelte'; // Import du bouton Flowbite-Svelte
 
 	interface Todo {
 		id: number;
@@ -17,20 +18,41 @@
 	let editingTodo: Todo | null = null;
 
 	const toggleCompletion = async (id: number) => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
-		);
-
 		const todoToUpdate = $todos.find((todo) => todo.id === id);
+
 		if (todoToUpdate) {
+			// Mise à jour locale
+			todos.update((current) =>
+				current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
+			);
+
+			// Envoi de la mise à jour à l'API
 			try {
-				await fetch('/api/todos', {
+				const response = await fetch('/api/todos', {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ id, completed: !todoToUpdate.completed })
 				});
+
+				if (!response.ok) {
+					console.error('Erreur lors de la mise à jour du serveur:', await response.json());
+
+					// Revenir en arrière en cas d'échec
+					todos.update((current) =>
+						current.map((todo) =>
+							todo.id === id ? { ...todo, completed: todoToUpdate.completed } : todo
+						)
+					);
+				}
 			} catch (error) {
-				console.error('Erreur réseau lors de la mise à jour de l’état:', error);
+				console.error('Erreur réseau lors de la mise à jour:', error);
+
+				// Revenir en arrière en cas d'erreur réseau
+				todos.update((current) =>
+					current.map((todo) =>
+						todo.id === id ? { ...todo, completed: todoToUpdate.completed } : todo
+					)
+				);
 			}
 		}
 	};
@@ -56,24 +78,32 @@
 	};
 
 	const updateTodo = async () => {
-		try {
-			const response = await fetch('/api/todos', {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(editingTodo)
-			});
+		if (editingTodo) {
+			try {
+				// Conversion de `dueDate` au format ISO-8601 si elle est définie
+				const formattedTodo = {
+					...editingTodo,
+					dueDate: editingTodo.dueDate ? new Date(editingTodo.dueDate).toISOString() : null
+				};
 
-			if (response.ok) {
-				const updatedTodo = await response.json();
-				todos.update((current) =>
-					current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
-				);
-				editingTodo = null;
-			} else {
-				console.error('Erreur lors de la mise à jour:', await response.json());
+				const response = await fetch('/api/todos', {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(formattedTodo)
+				});
+
+				if (response.ok) {
+					const updatedTodo = await response.json();
+					todos.update((current) =>
+						current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
+					);
+					editingTodo = null; // Fermer le formulaire d'édition
+				} else {
+					console.error('Erreur lors de la mise à jour:', await response.json());
+				}
+			} catch (error) {
+				console.error('Erreur réseau lors de la mise à jour:', error);
 			}
-		} catch (error) {
-			console.error('Erreur réseau lors de la mise à jour:', error);
 		}
 	};
 
@@ -132,13 +162,18 @@
 							</p>
 						</div>
 						<div>
-							<button
-								class="mr-2 rounded px-4 py-1 font-semibold text-white"
-								style="background-color: {todo.completed ? '#22c55e' : '#3b82f6'};"
+							<Button
 								on:click={() => toggleCompletion(todo.id)}
+								color={todo.completed ? 'green' : 'blue'}
+								class={`font-bold text-white `}
 							>
-								{todo.completed ? '✔️ Terminé' : '⏳ En cours'}
-							</button>
+								{#if todo.completed}
+									<span>👍 Terminé</span>
+								{:else}
+									<span>⏳ En cours</span>
+								{/if}
+							</Button>
+
 							<button class="mr-2 text-yellow-500" on:click={() => editTodo(todo)}>✏️</button>
 							<button class="text-red-500" on:click={() => deleteTodo(todo.id)}>❌</button>
 						</div>
