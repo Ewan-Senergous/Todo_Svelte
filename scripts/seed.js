@@ -7,7 +7,7 @@ async function main() {
 		{
 			title: 'Acheter des courses',
 			description: 'Lait, Pain, Œufs, Beurre',
-			completed: true,
+			completed: false,
 			priority: 'high',
 			dueDate: new Date('2024-12-31')
 		},
