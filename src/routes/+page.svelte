@@ -135,9 +135,14 @@
 							</p>
 						</div>
 						<div>
-							<button class="mr-2 text-green-500" on:click={() => toggleCompletion(todo.id)}>
-								{todo.completed ? '↩️' : '✔️'}
+							<button
+								class="mr-2 rounded px-4 py-1 font-semibold text-white"
+								style="background-color: {todo.completed ? '#22c55e' : '#3b82f6'};"
+								on:click={() => toggleCompletion(todo.id)}
+							>
+								{todo.completed ? '✔️ Terminé' : '⏳ En cours'}
 							</button>
+
 							<button class="mr-2 text-blue-500" on:click={() => editTodo(todo)}>✏️</button>
 							<button class="text-red-500" on:click={() => deleteTodo(todo.id)}>❌</button>
 						</div>
