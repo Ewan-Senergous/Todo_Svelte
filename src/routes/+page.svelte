@@ -15,10 +15,24 @@
 	let todos = writable<Todo[]>([]);
 	let editingTodo: Todo | null = null;
 
-	const toggleCompletion = (id: number) => {
+	const toggleCompletion = async (id: number) => {
 		todos.update((current) =>
 			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
 		);
+
+		// Appeler l'API pour mettre à jour la base
+		const todoToUpdate = $todos.find((todo) => todo.id === id);
+		if (todoToUpdate) {
+			try {
+				await fetch('/api/todos', {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, completed: !todoToUpdate.completed })
+				});
+			} catch (error) {
+				console.error('Erreur réseau lors de la mise à jour de l’état:', error);
+			}
+		}
 	};
 
 	// Fonction mise à jour pour supprimer une tâche
@@ -47,11 +61,27 @@
 		editingTodo = { ...todo };
 	};
 
-	const updateTodo = () => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === editingTodo?.id ? { ...editingTodo } : todo))
-		);
-		editingTodo = null;
+	const updateTodo = async () => {
+		try {
+			const response = await fetch('/api/todos', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(editingTodo)
+			});
+
+			if (response.ok) {
+				const updatedTodo = await response.json();
+				todos.update((current) =>
+					current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
+				);
+				console.log('Tâche mise à jour avec succès:', updatedTodo);
+				editingTodo = null; // Terminer l'édition
+			} else {
+				console.error('Erreur lors de la mise à jour:', await response.json());
+			}
+		} catch (error) {
+			console.error('Erreur réseau lors de la mise à jour:', error);
+		}
 	};
 
 	const navigateToCreate = () => {
