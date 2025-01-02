@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 
+	// Interface pour les tâches
 	interface Todo {
 		id: number;
 		title: string;
@@ -11,20 +12,24 @@
 		dueDate?: string;
 	}
 
+	// Store pour la liste des tâches
 	let todos = writable<Todo[]>([]);
-	let editingTodo: Todo | null = null; // Todo en cours d'édition
 
-	// Charger des données d'exemple au démarrage
-	onMount(() => {
-		const initialTodos: Todo[] = [
-			{ id: 1, title: 'Première tâche', completed: false, priority: 'medium' },
-			{ id: 2, title: 'Deuxième tâche', completed: true, priority: 'high' }
-		];
-		todos.set(initialTodos);
-	});
+	// Fonction pour obtenir la date du jour au format yyyy-mm-dd
+	const getTodayDate = (): string => {
+		const today = new Date();
+		return today.toISOString().split('T')[0]; // Format yyyy-mm-dd
+	};
 
-	// Ajouter une nouvelle tâche
-	let newTodo = { title: '', description: '', priority: 'medium', dueDate: '' };
+	// Initialisation d'une nouvelle tâche
+	let newTodo = {
+		title: '',
+		description: '',
+		priority: 'medium',
+		dueDate: getTodayDate() // Date par défaut : aujourd'hui
+	};
+
+	// Fonction pour ajouter une nouvelle tâche
 	const addTodo = () => {
 		todos.update((current) => {
 			const id = current.length ? Math.max(...current.map((t) => t.id)) + 1 : 1;
@@ -38,33 +43,42 @@
 			};
 			return [...current, todo];
 		});
-		newTodo = { title: '', description: '', priority: 'medium', dueDate: '' };
+
+		// Réinitialisation du formulaire avec la date du jour
+		newTodo = {
+			title: '',
+			description: '',
+			priority: 'medium',
+			dueDate: getTodayDate()
+		};
 	};
 
-	// Modifier une tâche existante
-	const updateTodo = () => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === editingTodo?.id ? { ...editingTodo } : todo))
-		);
-		editingTodo = null; // Quitter le mode édition
-	};
-
-	// Basculer l'état terminé/incomplet
+	// Fonction pour basculer l'état terminé/incomplet
 	const toggleCompletion = (id: number) => {
 		todos.update((current) =>
 			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
 		);
 	};
 
-	// Supprimer une tâche
+	// Fonction pour supprimer une tâche
 	const deleteTodo = (id: number) => {
 		todos.update((current) => current.filter((todo) => todo.id !== id));
 	};
 
-	// Activer le mode édition pour une tâche
-	const editTodo = (todo: Todo) => {
-		editingTodo = { ...todo }; // Copier la tâche sélectionnée
-	};
+	// Chargement initial des tâches
+	onMount(() => {
+		const initialTodos: Todo[] = [
+			{
+				id: 1,
+				title: 'Première tâche',
+				completed: false,
+				priority: 'medium',
+				dueDate: getTodayDate()
+			},
+			{ id: 2, title: 'Deuxième tâche', completed: true, priority: 'high', dueDate: getTodayDate() }
+		];
+		todos.set(initialTodos);
+	});
 </script>
 
 <main class="container mx-auto p-6">
@@ -124,13 +138,17 @@
 					<div class="flex items-start justify-between">
 						<div>
 							<h3 class="text-lg font-semibold">{todo.title}</h3>
-							{#if todo.description}
-								<p class="text-sm text-gray-600">{todo.description}</p>
-							{/if}
-							<p class="text-sm">
+							<p class="flex items-center space-x-2 text-sm">
 								<strong>Priorité :</strong>
-								{todo.priority} |
-								<strong>Échéance :</strong>
+								<span
+									class="inline-block rounded-full px-2 py-1 text-sm font-bold capitalize text-white"
+									class:bg-green-500={todo.priority === 'low'}
+									class:bg-orange-500={todo.priority === 'medium'}
+									class:bg-red-500={todo.priority === 'high'}
+								>
+									{todo.priority}
+								</span>
+								<strong>Échéance :</strong>&nbsp;
 								{todo.dueDate || 'Non définie'}
 							</p>
 						</div>
@@ -142,56 +160,9 @@
 							>
 								{todo.completed ? '✔️ Terminé' : '⏳ En cours'}
 							</button>
-
-							<button class="mr-2 text-blue-500" on:click={() => editTodo(todo)}>✏️</button>
-							<button class="text-red-500" on:click={() => deleteTodo(todo.id)}>❌</button>
+							<button class="mr-2 text-blue-500" on:click={() => deleteTodo(todo.id)}>❌</button>
 						</div>
 					</div>
-					{#if editingTodo?.id === todo.id}
-						<!-- Formulaire de modification -->
-						<form class="space-y-4" on:submit|preventDefault={updateTodo}>
-							<div>
-								<label for="edit-title" class="block text-sm font-medium">Titre</label>
-								<input
-									type="text"
-									id="edit-title"
-									bind:value={editingTodo.title}
-									required
-									class="w-full rounded border p-2"
-								/>
-							</div>
-							<div>
-								<label for="edit-priority" class="block text-sm font-medium">Priorité</label>
-								<select
-									id="edit-priority"
-									bind:value={editingTodo.priority}
-									class="w-full rounded border p-2"
-								>
-									<option value="low">Faible</option>
-									<option value="medium">Moyenne</option>
-									<option value="high">Élevée</option>
-								</select>
-							</div>
-							<div>
-								<label for="edit-description" class="block text-sm font-medium">Description</label>
-								<textarea
-									id="edit-description"
-									bind:value={editingTodo.description}
-									class="w-full rounded border p-2"
-								></textarea>
-							</div>
-							<div>
-								<label for="edit-dueDate" class="block text-sm font-medium">Date limite</label>
-								<input
-									type="date"
-									id="edit-dueDate"
-									bind:value={editingTodo.dueDate}
-									class="w-full rounded border p-2"
-								/>
-							</div>
-							<button type="submit" class="rounded bg-blue-500 p-2 text-white">Enregistrer</button>
-						</form>
-					{/if}
 				</li>
 			{/each}
 		</ul>
