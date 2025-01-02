@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
+	import { goto } from '$app/navigation';
 
-	// Interface pour les tâches
 	interface Todo {
 		id: number;
 		title: string;
@@ -12,138 +12,72 @@
 		dueDate?: string;
 	}
 
-	// Store pour la liste des tâches
 	let todos = writable<Todo[]>([]);
-	let editingTodo: Todo | null = null; // Tâche en cours d'édition
+	let editingTodo: Todo | null = null;
 
-	// Fonction pour obtenir la date du jour au format yyyy-mm-dd
-	const getTodayDate = (): string => {
-		const today = new Date();
-		return today.toISOString().split('T')[0]; // Format yyyy-mm-dd
-	};
-
-	// Initialisation d'une nouvelle tâche
-	let newTodo = {
-		title: '',
-		description: '',
-		priority: 'medium',
-		dueDate: getTodayDate() // Date par défaut : aujourd'hui
-	};
-
-	// Fonction pour ajouter une nouvelle tâche
-	const addTodo = () => {
-		todos.update((current) => {
-			const id = current.length ? Math.max(...current.map((t) => t.id)) + 1 : 1;
-			const todo: Todo = {
-				id,
-				title: newTodo.title,
-				description: newTodo.description,
-				priority: newTodo.priority,
-				dueDate: newTodo.dueDate,
-				completed: false
-			};
-			return [...current, todo];
-		});
-
-		// Réinitialisation du formulaire avec la date du jour
-		newTodo = {
-			title: '',
-			description: '',
-			priority: 'medium',
-			dueDate: getTodayDate()
-		};
-	};
-
-	// Fonction pour modifier une tâche existante
-	const updateTodo = () => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === editingTodo?.id ? { ...editingTodo } : todo))
-		);
-		editingTodo = null; // Quitter le mode édition
-	};
-
-	// Fonction pour basculer l'état terminé/incomplet
 	const toggleCompletion = (id: number) => {
 		todos.update((current) =>
 			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
 		);
 	};
 
-	// Fonction pour supprimer une tâche
-	const deleteTodo = (id: number) => {
-		todos.update((current) => current.filter((todo) => todo.id !== id));
+	// Fonction mise à jour pour supprimer une tâche
+	const deleteTodo = async (id: number) => {
+		try {
+			console.log('Suppression de la tâche avec ID:', id);
+
+			// Appel à l'API DELETE
+			const response = await fetch(`/api/todos?id=${id}`, {
+				method: 'DELETE'
+			});
+
+			if (response.ok) {
+				// Mise à jour locale des tâches
+				todos.update((current) => current.filter((todo) => todo.id !== id));
+				console.log('Tâche supprimée avec succès:', id);
+			} else {
+				console.error('Erreur lors de la suppression de la tâche:', await response.json());
+			}
+		} catch (error) {
+			console.error('Erreur réseau lors de la suppression de la tâche:', error);
+		}
 	};
 
-	// Fonction pour activer le mode édition pour une tâche
 	const editTodo = (todo: Todo) => {
-		editingTodo = { ...todo }; // Copier la tâche sélectionnée
+		editingTodo = { ...todo };
 	};
 
-	// Chargement initial des tâches
+	const updateTodo = () => {
+		todos.update((current) =>
+			current.map((todo) => (todo.id === editingTodo?.id ? { ...editingTodo } : todo))
+		);
+		editingTodo = null;
+	};
+
+	const navigateToCreate = () => {
+		goto('/create');
+	};
+
 	onMount(() => {
-		const initialTodos: Todo[] = [
-			{
-				id: 1,
-				title: 'Première tâche',
-				completed: false,
-				priority: 'medium',
-				dueDate: getTodayDate()
-			},
-			{ id: 2, title: 'Deuxième tâche', completed: true, priority: 'high', dueDate: getTodayDate() }
-		];
-		todos.set(initialTodos);
+		fetch('/api/todos')
+			.then((response) => response.json())
+			.then((data) => {
+				todos.set(data);
+			});
 	});
 </script>
 
 <main class="container mx-auto p-6">
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
+	<div class="mb-6 flex justify-end">
+		<button
+			class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+			on:click={navigateToCreate}
+		>
+			➕ Créer une tâche
+		</button>
+	</div>
 
-	<!-- Section pour ajouter une nouvelle tâche -->
-	<section class="mb-6 rounded bg-white p-4 shadow">
-		<h2 class="mb-4 text-lg font-semibold">Ajouter une tâche</h2>
-		<form class="space-y-4" on:submit|preventDefault={addTodo}>
-			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-				<div>
-					<label for="title" class="block text-sm font-medium">Titre</label>
-					<input
-						type="text"
-						id="title"
-						bind:value={newTodo.title}
-						required
-						class="w-full rounded border p-2"
-					/>
-				</div>
-				<div>
-					<label for="priority" class="block text-sm font-medium">Priorité</label>
-					<select id="priority" bind:value={newTodo.priority} class="w-full rounded border p-2">
-						<option value="low">Faible</option>
-						<option value="medium">Moyenne</option>
-						<option value="high">Élevée</option>
-					</select>
-				</div>
-			</div>
-			<div>
-				<label for="description" class="block text-sm font-medium">Description</label>
-				<textarea
-					id="description"
-					bind:value={newTodo.description}
-					class="w-full rounded border p-2"
-				></textarea>
-			</div>
-			<div>
-				<label for="dueDate" class="block text-sm font-medium">Date limite</label>
-				<input
-					type="date"
-					id="dueDate"
-					bind:value={newTodo.dueDate}
-					class="w-full rounded border p-2"
-				/>
-			</div>
-			<button type="submit" class="rounded bg-blue-500 p-2 text-white">Ajouter</button>
-		</form>
-	</section>
-
-	<!-- Liste des tâches -->
 	<section class="rounded bg-white p-4 shadow">
 		<h2 class="mb-4 text-lg font-semibold">Tâches</h2>
 		<ul class="space-y-4">
@@ -179,7 +113,6 @@
 						</div>
 					</div>
 					{#if editingTodo?.id === todo.id}
-						<!-- Formulaire pour modifier une tâche -->
 						<form class="space-y-4" on:submit|preventDefault={updateTodo}>
 							<div>
 								<label for="edit-title" class="block text-sm font-medium">Titre</label>
@@ -228,21 +161,3 @@
 		</ul>
 	</section>
 </main>
-
-<style>
-	main {
-		max-width: 800px;
-	}
-
-	.bg-green-500 {
-		background-color: #22c55e; /* Vert pour faible */
-	}
-
-	.bg-orange-500 {
-		background-color: #f97316; /* Orange pour moyen */
-	}
-
-	.bg-red-500 {
-		background-color: #ef4444; /* Rouge pour élevé */
-	}
-</style>
