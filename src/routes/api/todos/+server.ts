@@ -49,3 +49,29 @@ export const DELETE: RequestHandler = async ({ url }) => {
 		});
 	}
 };
+
+export const PATCH: RequestHandler = async ({ request }) => {
+	try {
+		const data = await request.json();
+		const id = data.id;
+
+		// Validation de l'ID
+		if (!id || isNaN(Number(id))) {
+			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
+		}
+
+		// Mise à jour des données dans la base
+		const updatedTodo = await todoService.update(id, data);
+
+		if (!updatedTodo) {
+			return new Response(JSON.stringify({ error: 'Tâche introuvable' }), { status: 404 });
+		}
+
+		return new Response(JSON.stringify(updatedTodo), { status: 200 });
+	} catch (error) {
+		console.error('Erreur lors de la mise à jour de la tâche:', error);
+		return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour' }), {
+			status: 500
+		});
+	}
+};
