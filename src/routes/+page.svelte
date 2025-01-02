@@ -78,24 +78,32 @@
 	};
 
 	const updateTodo = async () => {
-		try {
-			const response = await fetch('/api/todos', {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(editingTodo)
-			});
+		if (editingTodo) {
+			try {
+				// Conversion de `dueDate` au format ISO-8601 si elle est définie
+				const formattedTodo = {
+					...editingTodo,
+					dueDate: editingTodo.dueDate ? new Date(editingTodo.dueDate).toISOString() : null
+				};
 
-			if (response.ok) {
-				const updatedTodo = await response.json();
-				todos.update((current) =>
-					current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
-				);
-				editingTodo = null;
-			} else {
-				console.error('Erreur lors de la mise à jour:', await response.json());
+				const response = await fetch('/api/todos', {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(formattedTodo)
+				});
+
+				if (response.ok) {
+					const updatedTodo = await response.json();
+					todos.update((current) =>
+						current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
+					);
+					editingTodo = null; // Fermer le formulaire d'édition
+				} else {
+					console.error('Erreur lors de la mise à jour:', await response.json());
+				}
+			} catch (error) {
+				console.error('Erreur réseau lors de la mise à jour:', error);
 			}
-		} catch (error) {
-			console.error('Erreur réseau lors de la mise à jour:', error);
 		}
 	};
 
