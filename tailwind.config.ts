@@ -9,6 +9,9 @@ export default {
 	],
 	theme: {
 		extend: {
+			colors: {
+				greenForest: '#2f9f6e'
+			},
 			fontFamily: {
 				sans: ['Poppins', 'sans-serif']
 			}

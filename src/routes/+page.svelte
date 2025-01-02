@@ -3,6 +3,7 @@
 	import { writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { fade, slide } from 'svelte/transition';
+	import { Button } from 'flowbite-svelte'; // Import du bouton Flowbite-Svelte
 
 	interface Todo {
 		id: number;
@@ -97,7 +98,7 @@
 			class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
 			on:click={navigateToCreate}
 		>
-			➕ Créer une tâche
+			✚ Créer une tâche
 		</button>
 	</div>
 
@@ -132,13 +133,18 @@
 							</p>
 						</div>
 						<div>
-							<button
-								class="mr-2 rounded px-4 py-1 font-semibold text-white"
-								style="background-color: {todo.completed ? '#22c55e' : '#3b82f6'};"
+							<Button
 								on:click={() => toggleCompletion(todo.id)}
+								color={todo.completed ? 'green' : 'blue'}
+								class={`font-bold text-white`}
 							>
-								{todo.completed ? '✔️ Terminé' : '⏳ En cours'}
-							</button>
+								{#if todo.completed}
+									<span>👍 Terminé</span>
+								{:else}
+									<span>⏳ En cours</span>
+								{/if}
+							</Button>
+
 							<button class="mr-2 text-yellow-500" on:click={() => editTodo(todo)}>✏️</button>
 							<button class="text-red-500" on:click={() => deleteTodo(todo.id)}>❌</button>
 						</div>
