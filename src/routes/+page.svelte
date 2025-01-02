@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
+	import { fade, slide } from 'svelte/transition';
 
 	interface Todo {
 		id: number;
@@ -20,7 +21,6 @@
 			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
 		);
 
-		// Appeler l'API pour mettre à jour la base
 		const todoToUpdate = $todos.find((todo) => todo.id === id);
 		if (todoToUpdate) {
 			try {
@@ -35,20 +35,14 @@
 		}
 	};
 
-	// Fonction mise à jour pour supprimer une tâche
 	const deleteTodo = async (id: number) => {
 		try {
-			console.log('Suppression de la tâche avec ID:', id);
-
-			// Appel à l'API DELETE
 			const response = await fetch(`/api/todos?id=${id}`, {
 				method: 'DELETE'
 			});
 
 			if (response.ok) {
-				// Mise à jour locale des tâches
 				todos.update((current) => current.filter((todo) => todo.id !== id));
-				console.log('Tâche supprimée avec succès:', id);
 			} else {
 				console.error('Erreur lors de la suppression de la tâche:', await response.json());
 			}
@@ -74,8 +68,7 @@
 				todos.update((current) =>
 					current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
 				);
-				console.log('Tâche mise à jour avec succès:', updatedTodo);
-				editingTodo = null; // Terminer l'édition
+				editingTodo = null;
 			} else {
 				console.error('Erreur lors de la mise à jour:', await response.json());
 			}
@@ -97,7 +90,7 @@
 	});
 </script>
 
-<main class="container mx-auto p-6">
+<main class="container mx-auto p-6" in:fade={{ duration: 500 }}>
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
 	<div class="mb-6 flex justify-end">
 		<button
@@ -111,13 +104,15 @@
 	<section class="rounded bg-white p-4 shadow">
 		<h2 class="mb-4 text-lg font-semibold">Tâches</h2>
 		<ul class="space-y-4">
-			{#each $todos as todo}
-				<li class="flex flex-col space-y-2 rounded bg-gray-100 p-4 shadow">
+			{#each $todos as todo (todo.id)}
+				<li
+					class="flex flex-col space-y-2 rounded bg-gray-100 p-4 shadow"
+					in:slide={{ duration: 300 }}
+					out:fade={{ duration: 200 }}
+				>
 					<div class="flex items-start justify-between">
 						<div>
 							<h3 class="text-lg font-semibold">{todo.title}</h3>
-
-							<!-- Affichage de la description -->
 							{#if todo.description}
 								<p class="text-sm text-gray-600">{todo.description}</p>
 							{/if}
@@ -197,3 +192,9 @@
 		</ul>
 	</section>
 </main>
+
+<style>
+	.container {
+		max-width: 800px;
+	}
+</style>
