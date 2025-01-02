@@ -111,6 +111,23 @@
 		goto('/create');
 	};
 
+	let searchTerm = '';
+
+	const searchTodos = async () => {
+		try {
+			const response = await fetch(`/api/todos?title=${encodeURIComponent(searchTerm)}`);
+			const data = await response.json();
+
+			if (response.ok) {
+				todos.set(data);
+			} else {
+				console.error('Erreur lors de la recherche :', data.error);
+			}
+		} catch (error) {
+			console.error('Erreur réseau lors de la recherche :', error);
+		}
+	};
+
 	onMount(() => {
 		fetch('/api/todos')
 			.then((response) => response.json())
@@ -122,7 +139,14 @@
 
 <main class="container mx-auto p-6" in:fade={{ duration: 500 }}>
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
-	<div class="mb-6 flex justify-end">
+	<div class="mb-6 flex items-center justify-between">
+		<input
+			type="text"
+			placeholder="Rechercher une todo..."
+			bind:value={searchTerm}
+			on:input={searchTodos}
+			class="w-1/2 rounded border p-2"
+		/>
 		<Button
 			color="green"
 			class="flex items-center space-x-2 font-bold text-white"
@@ -220,6 +244,11 @@
 									bind:value={editingTodo.dueDate}
 									class="w-full rounded border p-2"
 								/>
+								<p class="mt-2 text-sm">
+									Échéance actuelle : {editingTodo.dueDate
+										? new Date(editingTodo.dueDate).toLocaleDateString('fr-FR')
+										: 'Non définie'}
+								</p>
 							</div>
 							<button type="submit" class="rounded bg-blue-500 p-2 text-white">Enregistrer</button>
 						</form>

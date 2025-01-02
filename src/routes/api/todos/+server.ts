@@ -1,9 +1,23 @@
 import { todoService } from '$lib/todos.server';
 import type { RequestHandler } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async () => {
-	const todos = await todoService.get();
-	return new Response(JSON.stringify(todos), { status: 200 });
+export const GET: RequestHandler = async ({ url }) => {
+	try {
+		const title = url.searchParams.get('title') || '';
+
+		if (title) {
+			const todos = await todoService.searchByTitle(title);
+			return new Response(JSON.stringify(todos), { status: 200 });
+		}
+
+		const todos = await todoService.get();
+		return new Response(JSON.stringify(todos), { status: 200 });
+	} catch (error) {
+		console.error('Erreur lors de la récupération des tâches:', error);
+		return new Response(JSON.stringify({ error: 'Erreur lors de la récupération des tâches' }), {
+			status: 500
+		});
+	}
 };
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -30,7 +44,6 @@ export const DELETE: RequestHandler = async ({ url }) => {
 	try {
 		const id = Number(url.searchParams.get('id'));
 
-		// Validation de l'ID
 		if (isNaN(id)) {
 			console.error('ID invalide:', id);
 			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
@@ -41,7 +54,7 @@ export const DELETE: RequestHandler = async ({ url }) => {
 		await todoService.remove(id);
 
 		console.log('Tâche supprimée avec succès:', id);
-		return new Response(null, { status: 204 }); // Pas de contenu
+		return new Response(null, { status: 204 });
 	} catch (error) {
 		console.error('Erreur lors de la suppression de la tâche:', error);
 		return new Response(JSON.stringify({ error: 'Erreur lors de la suppression' }), {
@@ -55,12 +68,10 @@ export const PATCH: RequestHandler = async ({ request }) => {
 		const data = await request.json();
 		const id = data.id;
 
-		// Validation de l'ID
 		if (!id || isNaN(Number(id))) {
 			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
 		}
 
-		// Mise à jour des données dans la base
 		const updatedTodo = await todoService.update(id, data);
 
 		if (!updatedTodo) {
