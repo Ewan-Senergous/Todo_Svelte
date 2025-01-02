@@ -86,6 +86,12 @@
 					<div class="flex items-start justify-between">
 						<div>
 							<h3 class="text-lg font-semibold">{todo.title}</h3>
+
+							<!-- Affichage de la description -->
+							{#if todo.description}
+								<p class="text-sm text-gray-600">{todo.description}</p>
+							{/if}
+
 							<p class="flex items-center space-x-2 text-sm">
 								<strong>Priorité :</strong>
 								<span
@@ -97,7 +103,7 @@
 									{todo.priority}
 								</span>
 								<strong>Échéance :</strong>&nbsp;
-								{todo.dueDate || 'Non définie'}
+								{todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
 							</p>
 						</div>
 						<div>

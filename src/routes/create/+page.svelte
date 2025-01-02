@@ -12,7 +12,8 @@
 		title: '',
 		description: '',
 		priority: 'medium',
-		dueDate: getTodayDate()
+		dueDate: getTodayDate(),
+		completed: false // Par défaut, la tâche est "En cours"
 	};
 
 	// Fonction pour créer une nouvelle tâche
@@ -82,6 +83,16 @@
 					class="w-full rounded border p-2"
 				/>
 			</div>
+
+			<!-- Champ pour choisir l'état de la tâche -->
+			<div>
+				<label for="completed" class="block text-sm font-medium">Statut</label>
+				<select id="completed" bind:value={newTodo.completed} class="w-full rounded border p-2">
+					<option value={false}>En cours</option>
+					<option value={true}>Terminé</option>
+				</select>
+			</div>
+
 			<button type="submit" class="rounded bg-blue-500 p-2 text-white">Créer</button>
 		</form>
 	</section>
