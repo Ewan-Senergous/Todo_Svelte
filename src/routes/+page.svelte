@@ -3,6 +3,7 @@
 	import { writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 
+	// Interface pour les tâches
 	interface Todo {
 		id: number;
 		title: string;
@@ -12,52 +13,92 @@
 		dueDate?: string;
 	}
 
+	// Store pour les tâches
 	let todos = writable<Todo[]>([]);
 	let editingTodo: Todo | null = null;
 
-	const toggleCompletion = (id: number) => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
-		);
+	// Fonction pour basculer l'état terminé/incomplet
+	const toggleCompletion = async (id: number) => {
+		try {
+			const updatedTodos = $todos.map((todo) =>
+				todo.id === id ? { ...todo, completed: !todo.completed } : todo
+			);
+			todos.set(updatedTodos);
+
+			// Envoyez la modification au serveur
+			await fetch('/api/todos', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ id, completed: !updatedTodos.find((t) => t.id === id)?.completed })
+			});
+		} catch (error) {
+			console.error('Erreur lors de la mise à jour du statut:', error);
+		}
 	};
 
-	// Fonction mise à jour pour supprimer une tâche
+	// Fonction pour supprimer une tâche
 	const deleteTodo = async (id: number) => {
 		try {
-			console.log('Suppression de la tâche avec ID:', id);
-
-			// Appel à l'API DELETE
-			const response = await fetch(`/api/todos?id=${id}`, {
+			// Supprimez la tâche du serveur
+			const response = await fetch(`/api/todos/${id}`, {
 				method: 'DELETE'
 			});
 
 			if (response.ok) {
-				// Mise à jour locale des tâches
+				// Mettez à jour la liste localement
 				todos.update((current) => current.filter((todo) => todo.id !== id));
-				console.log('Tâche supprimée avec succès:', id);
+				console.log(`Tâche avec l'ID ${id} supprimée avec succès.`);
 			} else {
-				console.error('Erreur lors de la suppression de la tâche:', await response.json());
+				console.error(`Erreur lors de la suppression de la tâche avec l'ID ${id}.`);
 			}
 		} catch (error) {
-			console.error('Erreur réseau lors de la suppression de la tâche:', error);
+			console.error('Erreur réseau lors de la suppression:', error);
 		}
 	};
 
+	// Fonction pour activer le mode édition
 	const editTodo = (todo: Todo) => {
 		editingTodo = { ...todo };
 	};
 
-	const updateTodo = () => {
-		todos.update((current) =>
-			current.map((todo) => (todo.id === editingTodo?.id ? { ...editingTodo } : todo))
-		);
-		editingTodo = null;
+	// Fonction pour modifier une tâche
+	const updateTodo = async () => {
+		if (!editingTodo) return;
+
+		try {
+			console.log('Modification envoyée:', editingTodo);
+
+			// Envoyez les modifications au serveur
+			const response = await fetch('/api/todos', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(editingTodo)
+			});
+
+			const updatedTodo = await response.json();
+
+			if (response.ok) {
+				// Mettez à jour la tâche localement
+				todos.update((current) =>
+					current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
+				);
+				console.log('Tâche mise à jour avec succès:', updatedTodo);
+			} else {
+				console.error('Erreur lors de la mise à jour de la tâche:', updatedTodo);
+			}
+
+			editingTodo = null; // Quitter le mode édition
+		} catch (error) {
+			console.error('Erreur réseau lors de la mise à jour:', error);
+		}
 	};
 
+	// Fonction pour naviguer vers la page de création
 	const navigateToCreate = () => {
-		goto('/create');
+		goto('/create'); // Redirige vers la page /create
 	};
 
+	// Charger les données initiales
 	onMount(() => {
 		fetch('/api/todos')
 			.then((response) => response.json())
@@ -69,6 +110,8 @@
 
 <main class="container mx-auto p-6">
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
+
+	<!-- Bouton pour créer une tâche -->
 	<div class="mb-6 flex justify-end">
 		<button
 			class="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
@@ -78,6 +121,7 @@
 		</button>
 	</div>
 
+	<!-- Liste des tâches -->
 	<section class="rounded bg-white p-4 shadow">
 		<h2 class="mb-4 text-lg font-semibold">Tâches</h2>
 		<ul class="space-y-4">
@@ -86,6 +130,12 @@
 					<div class="flex items-start justify-between">
 						<div>
 							<h3 class="text-lg font-semibold">{todo.title}</h3>
+
+							<!-- Ajout de la description -->
+							{#if todo.description}
+								<p class="text-sm text-gray-600">{todo.description}</p>
+							{/if}
+
 							<p class="flex items-center space-x-2 text-sm">
 								<strong>Priorité :</strong>
 								<span
@@ -97,7 +147,7 @@
 									{todo.priority}
 								</span>
 								<strong>Échéance :</strong>&nbsp;
-								{todo.dueDate || 'Non définie'}
+								{todo.dueDate ? todo.dueDate.split('T')[0] : 'Non définie'}
 							</p>
 						</div>
 						<div>
@@ -114,6 +164,7 @@
 					</div>
 					{#if editingTodo?.id === todo.id}
 						<form class="space-y-4" on:submit|preventDefault={updateTodo}>
+							<!-- Formulaire d'édition -->
 							<div>
 								<label for="edit-title" class="block text-sm font-medium">Titre</label>
 								<input
@@ -161,3 +212,21 @@
 		</ul>
 	</section>
 </main>
+
+<style>
+	main {
+		max-width: 800px;
+	}
+
+	.bg-green-500 {
+		background-color: #22c55e; /* Vert pour faible */
+	}
+
+	.bg-orange-500 {
+		background-color: #f97316; /* Orange pour moyen */
+	}
+
+	.bg-red-500 {
+		background-color: #ef4444; /* Rouge pour élevé */
+	}
+</style>

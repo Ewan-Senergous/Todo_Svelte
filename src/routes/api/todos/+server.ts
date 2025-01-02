@@ -26,25 +26,27 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-export const DELETE: RequestHandler = async ({ url }) => {
+export const PATCH: RequestHandler = async ({ request }) => {
 	try {
-		const id = Number(url.searchParams.get('id'));
+		const data = await request.json();
+		console.log('Données reçues dans PATCH:', data);
 
-		// Validation de l'ID
-		if (isNaN(id)) {
-			console.error('ID invalide:', id);
-			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
+		// Vérifiez si l'ID est fourni
+		if (!data.id) {
+			return new Response(JSON.stringify({ error: 'ID requis' }), { status: 400 });
 		}
 
-		console.log('ID de la tâche à supprimer:', id);
+		// Conversion de `dueDate` en format Date si présent
+		if (data.dueDate) {
+			data.dueDate = new Date(data.dueDate);
+		}
 
-		await todoService.remove(id);
-
-		console.log('Tâche supprimée avec succès:', id);
-		return new Response(null, { status: 204 }); // Pas de contenu
+		const updatedTodo = await todoService.update(data.id, data);
+		console.log('Tâche mise à jour avec succès:', updatedTodo);
+		return new Response(JSON.stringify(updatedTodo), { status: 200 });
 	} catch (error) {
-		console.error('Erreur lors de la suppression de la tâche:', error);
-		return new Response(JSON.stringify({ error: 'Erreur lors de la suppression' }), {
+		console.error('Erreur lors de la mise à jour de la tâche:', error);
+		return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour' }), {
 			status: 500
 		});
 	}
