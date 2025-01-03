@@ -33,8 +33,9 @@ export const DeleteTodoSchema = z.object({
 export interface Todo {
 	id: number;
 	title: string;
-	description?: string;
+	description?: string | null;
 	completed: boolean;
 	priority: string;
-	dueDate?: string;
+	dueDate?: Date | null;
+	order: number;
 }

@@ -14,5 +14,6 @@ model Todo {
     completed Boolean @default(false)
     priority String @default("medium")
     dueDate DateTime?
+    order Int @default(0)
 }
 
