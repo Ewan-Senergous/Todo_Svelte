@@ -109,6 +109,12 @@
 							</Button>
 							<button on:click={() => onEdit(todo)} class="font-bold text-yellow-500">✏️</button>
 							<button on:click={() => onDelete(todo.id)} class="font-bold text-red-500">❌</button>
+							<form method="POST" action="?/duplicateTodo">
+								<input type="hidden" name="id" value={todo.id} />
+								<Button type="submit" color={'purple'} class={`font-bold text-white `}>
+									🔄 Dupliquer
+								</Button>
+							</form>
 						</div>
 					</div>
 				{/if}
