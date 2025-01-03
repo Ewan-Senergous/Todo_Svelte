@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
 	import type { Todo } from '$lib/todoSchema';
+	import { Button } from 'flowbite-svelte';
 
 	export let filteredTodos: Todo[] = [];
 	export let editingTodo: Todo | null = null;
@@ -95,14 +96,17 @@
 							</p>
 						</div>
 						<div class="flex space-x-2">
-							<button
+							<Button
 								on:click={() => onToggle(todo.id)}
-								class="rounded px-2 py-1 font-bold text-white"
-								class:bg-green-500={todo.completed}
-								class:bg-blue-500={!todo.completed}
+								color={todo.completed ? 'green' : 'blue'}
+								class={`font-bold text-white `}
 							>
-								{todo.completed ? '👍 Terminé' : '⏳ En cours'}
-							</button>
+								{#if todo.completed}
+									<span>👍 Terminé</span>
+								{:else}
+									<span>⏳ En cours</span>
+								{/if}
+							</Button>
 							<button on:click={() => onEdit(todo)} class="font-bold text-yellow-500">✏️</button>
 							<button on:click={() => onDelete(todo.id)} class="font-bold text-red-500">❌</button>
 						</div>
