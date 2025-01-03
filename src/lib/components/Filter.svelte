@@ -1,46 +1,41 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { writable, derived, type Writable } from 'svelte/store';
+	import type { Todo } from '$lib/todoSchema';
 
-	// Dispatcher pour transmettre les filtres au parent
-	const dispatch = createEventDispatcher();
+	export let todos: Writable<Todo[]>;
+	export let filteredTodos: Writable<Todo[]>;
 
-	// Variables des filtres
-	let title = '';
-	let priority = 'all'; // 'low', 'medium', 'high', 'all'
-	let status = 'all'; // 'completed', 'incomplete', 'all'
-	let dueDate = '';
+	let filterPriority = writable<string>('all');
+	let filterStatus = writable<string>('all');
+	let filterDueDate = writable<string>('');
 
-	// Fonction pour envoyer les filtres au parent
-	const updateFilters = () => {
-		dispatch('filterChange', { title, priority, status, dueDate });
-	};
+	const derivedFilteredTodos = derived(
+		[todos, filterPriority, filterStatus, filterDueDate],
+		([$todos, $filterPriority, $filterStatus, $filterDueDate]) => {
+			return $todos.filter((todo: Todo) => {
+				if ($filterPriority !== 'all' && todo.priority !== $filterPriority) return false;
+				if ($filterStatus === 'completed' && !todo.completed) return false;
+				if ($filterStatus === 'incomplete' && todo.completed) return false;
+				if ($filterDueDate && todo.dueDate) {
+					const dueDate = new Date(todo.dueDate).toISOString().split('T')[0];
+					if (dueDate !== $filterDueDate) return false;
+				}
+				return true;
+			});
+		}
+	);
+
+	derivedFilteredTodos.subscribe((value) => {
+		filteredTodos.set(value);
+	});
 </script>
 
 <section class="mb-6 rounded bg-gray-100 p-4 shadow">
 	<h2 class="mb-4 text-lg font-semibold">Filtres</h2>
-	<div class="grid gap-4 md:grid-cols-4">
-		<!-- Filtrer par titre -->
-		<div>
-			<label for="filter-title" class="block text-sm font-medium">Titre</label>
-			<input
-				id="filter-title"
-				type="text"
-				bind:value={title}
-				placeholder="Recherche par titre"
-				class="w-full rounded border p-2"
-				on:input={updateFilters}
-			/>
-		</div>
-
-		<!-- Filtrer par priorité -->
+	<div class="grid gap-4 md:grid-cols-3">
 		<div>
 			<label for="filter-priority" class="block text-sm font-medium">Priorité</label>
-			<select
-				id="filter-priority"
-				bind:value={priority}
-				class="w-full rounded border p-2"
-				on:change={updateFilters}
-			>
+			<select id="filter-priority" bind:value={$filterPriority} class="w-full rounded border p-2">
 				<option value="all">Toutes</option>
 				<option value="low">Faible</option>
 				<option value="medium">Moyenne</option>
@@ -48,37 +43,23 @@
 			</select>
 		</div>
 
-		<!-- Filtrer par statut -->
 		<div>
 			<label for="filter-status" class="block text-sm font-medium">Statut</label>
-			<select
-				id="filter-status"
-				bind:value={status}
-				class="w-full rounded border p-2"
-				on:change={updateFilters}
-			>
+			<select id="filter-status" bind:value={$filterStatus} class="w-full rounded border p-2">
 				<option value="all">Tous</option>
 				<option value="completed">Terminés</option>
 				<option value="incomplete">En cours</option>
 			</select>
 		</div>
 
-		<!-- Filtrer par date d'échéance -->
 		<div>
 			<label for="filter-dueDate" class="block text-sm font-medium">Date d'échéance</label>
 			<input
 				id="filter-dueDate"
 				type="date"
-				bind:value={dueDate}
+				bind:value={$filterDueDate}
 				class="w-full rounded border p-2"
-				on:change={updateFilters}
 			/>
 		</div>
 	</div>
 </section>
-
-<style>
-	section {
-		background: #f9fafb;
-	}
-</style>

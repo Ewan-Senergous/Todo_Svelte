@@ -47,7 +47,7 @@ class TodoService {
 			where: {
 				completed: false,
 				dueDate: { lt: new Date() }
-			} // Todos en retard
+			}
 		});
 	}
 
@@ -82,12 +82,11 @@ class TodoService {
 		return { items, total, page, size: take, pages: Math.ceil(total / take) };
 	}
 
-	// Nouvelle méthode : Recherche par titre
 	async searchByTitle(title: string): Promise<Todo[]> {
 		return db.todo.findMany({
 			where: {
 				title: {
-					contains: title // Recherche partielle
+					contains: title
 				}
 			}
 		});
