@@ -1,22 +1,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 
-	// Fonction pour obtenir la date du jour
 	const getTodayDate = (): string => {
 		const today = new Date();
 		return today.toISOString().split('T')[0];
 	};
 
-	// Initialisation d'une nouvelle tâche
 	let newTodo = {
 		title: '',
 		description: '',
 		priority: 'medium',
 		dueDate: getTodayDate(),
-		completed: false // Par défaut, la tâche est "En cours"
+		completed: false
 	};
 
-	// Fonction pour créer une nouvelle tâche
 	const createTodo = async () => {
 		try {
 			console.log('Données envoyées:', newTodo);
@@ -31,7 +28,7 @@
 			console.log('Réponse du serveur:', data);
 
 			if (response.ok) {
-				goto('/'); // Redirection vers la page principale
+				goto('/');
 			} else {
 				alert('Erreur lors de la création de la tâche');
 			}
@@ -84,7 +81,6 @@
 				/>
 			</div>
 
-			<!-- Champ pour choisir l'état de la tâche -->
 			<div>
 				<label for="completed" class="block text-sm font-medium">Statut</label>
 				<select id="completed" bind:value={newTodo.completed} class="w-full rounded border p-2">

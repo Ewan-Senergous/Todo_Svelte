@@ -9,19 +9,29 @@
 	let filterStatus = writable<string>('all');
 	let filterDueDate = writable<string>('');
 
+	const filterTodos = (
+		todos: Todo[],
+		priority: string,
+		status: string,
+		dueDate: string
+	): Todo[] => {
+		return todos.filter((todo: Todo) => {
+			if (priority !== 'all' && todo.priority !== priority) return false;
+			if (status === 'completed' && !todo.completed) return false;
+			if (status === 'incomplete' && todo.completed) return false;
+			if (dueDate && todo.dueDate) {
+				const formattedDueDate = new Date(todo.dueDate).toISOString().split('T')[0];
+				if (formattedDueDate !== dueDate) return false;
+			}
+			return true;
+		});
+	};
+
+	// Mettre à jour FilteredTodos
 	const derivedFilteredTodos = derived(
 		[todos, filterPriority, filterStatus, filterDueDate],
 		([$todos, $filterPriority, $filterStatus, $filterDueDate]) => {
-			return $todos.filter((todo: Todo) => {
-				if ($filterPriority !== 'all' && todo.priority !== $filterPriority) return false;
-				if ($filterStatus === 'completed' && !todo.completed) return false;
-				if ($filterStatus === 'incomplete' && todo.completed) return false;
-				if ($filterDueDate && todo.dueDate) {
-					const dueDate = new Date(todo.dueDate).toISOString().split('T')[0];
-					if (dueDate !== $filterDueDate) return false;
-				}
-				return true;
-			});
+			return filterTodos($todos, $filterPriority, $filterStatus, $filterDueDate);
 		}
 	);
 

@@ -30,27 +30,6 @@ class TodoService {
 		});
 	}
 
-	async getByPriority(priority: Todo['priority']): Promise<Todo[]> {
-		return db.todo.findMany({
-			where: { priority }
-		});
-	}
-
-	async getCompletedTodos(): Promise<Todo[]> {
-		return db.todo.findMany({
-			where: { completed: true }
-		});
-	}
-
-	async getOverdueTodos(): Promise<Todo[]> {
-		return db.todo.findMany({
-			where: {
-				completed: false,
-				dueDate: { lt: new Date() }
-			}
-		});
-	}
-
 	async getFiltered(
 		searchTerm?: string,
 		page = 1,
