@@ -29,3 +29,12 @@ export const DeleteTodoSchema = z.object({
 		invalid_type_error: "L'ID doit être un nombre valide"
 	})
 });
+
+export interface Todo {
+	id: number;
+	title: string;
+	description?: string;
+	completed: boolean;
+	priority: string;
+	dueDate?: string;
+}

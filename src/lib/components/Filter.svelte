@@ -1,25 +1,14 @@
-<script context="module" lang="ts">
-	export interface Todo {
-		id: number;
-		title: string;
-		description?: string;
-		completed: boolean;
-		priority: string; // 'low', 'medium', 'high'
-		dueDate?: string;
-	}
-</script>
-
 <script lang="ts">
 	import { writable, derived, type Writable } from 'svelte/store';
+	import type { Todo } from '$lib/todoSchema';
 
-	export let todos: Writable<Todo[]>; // Liste des tâches (Writable)
-	export let filteredTodos: Writable<Todo[]>; // Liste des tâches filtrées (Writable)
+	export let todos: Writable<Todo[]>;
+	export let filteredTodos: Writable<Todo[]>;
 
-	let filterPriority = writable<string>('all'); // Priorité : 'all', 'low', 'medium', 'high'
-	let filterStatus = writable<string>('all'); // Statut : 'all', 'completed', 'incomplete'
-	let filterDueDate = writable<string>(''); // Date d'échéance au format YYYY-MM-DD
+	let filterPriority = writable<string>('all');
+	let filterStatus = writable<string>('all');
+	let filterDueDate = writable<string>('');
 
-	// Derived store pour calculer les tâches filtrées
 	const derivedFilteredTodos = derived(
 		[todos, filterPriority, filterStatus, filterDueDate],
 		([$todos, $filterPriority, $filterStatus, $filterDueDate]) => {

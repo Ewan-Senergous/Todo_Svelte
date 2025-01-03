@@ -4,72 +4,12 @@
 	import { goto } from '$app/navigation';
 	import { fade, slide } from 'svelte/transition';
 	import { Button } from 'flowbite-svelte';
-	import Filter from '$lib/components/Filter.svelte'; // Import du composant de filtre
+	import Filter from '$lib/components/Filter.svelte';
+	import type { Todo } from '$lib/todoSchema';
+	import { todos, toggleCompletion, deleteTodo } from '$lib/components/todoService';
 
-	// Interface pour représenter une tâche
-	interface Todo {
-		id: number;
-		title: string;
-		description?: string;
-		completed: boolean;
-		priority: string; // 'low', 'medium', 'high'
-		dueDate?: string;
-	}
-
-	let todos = writable<Todo[]>([]); // Liste de toutes les tâches
-	let filteredTodos = writable<Todo[]>([]); // Liste des tâches filtrées
-
+	let filteredTodos = writable<Todo[]>([]);
 	let editingTodo: Todo | null = null;
-
-	const toggleCompletion = async (id: number) => {
-		const todoToUpdate = $todos.find((todo) => todo.id === id);
-
-		if (todoToUpdate) {
-			todos.update((current) =>
-				current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo))
-			);
-
-			try {
-				const response = await fetch('/api/todos', {
-					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ id, completed: !todoToUpdate.completed })
-				});
-
-				if (!response.ok) {
-					console.error('Erreur lors de la mise à jour du serveur:', await response.json());
-					todos.update((current) =>
-						current.map((todo) =>
-							todo.id === id ? { ...todo, completed: todoToUpdate.completed } : todo
-						)
-					);
-				}
-			} catch (error) {
-				console.error('Erreur réseau lors de la mise à jour:', error);
-				todos.update((current) =>
-					current.map((todo) =>
-						todo.id === id ? { ...todo, completed: todoToUpdate.completed } : todo
-					)
-				);
-			}
-		}
-	};
-
-	const deleteTodo = async (id: number) => {
-		try {
-			const response = await fetch(`/api/todos?id=${id}`, {
-				method: 'DELETE'
-			});
-
-			if (response.ok) {
-				todos.update((current) => current.filter((todo) => todo.id !== id));
-			} else {
-				console.error('Erreur lors de la suppression de la tâche:', await response.json());
-			}
-		} catch (error) {
-			console.error('Erreur réseau lors de la suppression de la tâche:', error);
-		}
-	};
 
 	const editTodo = (todo: Todo) => {
 		editingTodo = { ...todo };
@@ -94,7 +34,7 @@
 					todos.update((current) =>
 						current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
 					);
-					editingTodo = null; // Quitter le mode édition
+					editingTodo = null;
 				} else {
 					console.error('Erreur lors de la mise à jour:', await response.json());
 				}
@@ -137,7 +77,6 @@
 <main class="container mx-auto p-6" in:fade={{ duration: 500 }}>
 	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
 
-	<!-- Barre de recherche et bouton "Créer une tâche" -->
 	<div class="mb-6 flex items-center justify-between">
 		<input
 			type="text"
@@ -156,10 +95,8 @@
 		</Button>
 	</div>
 
-	<!-- Section des filtres -->
 	<Filter {todos} bind:filteredTodos />
 
-	<!-- Liste des tâches -->
 	<section class="rounded border border-[#6c7280] bg-white p-4">
 		<h2 class="mb-4 text-lg font-semibold">Tâches</h2>
 		<ul class="space-y-4">
@@ -195,7 +132,7 @@
 						</div>
 						<div class="flex space-x-2">
 							<Button
-								on:click={() => toggleCompletion(todo.id)}
+								on:click={() => toggleCompletion(todo.id, todos)}
 								color={todo.completed ? 'green' : 'blue'}
 								class={`font-bold text-white `}
 							>
@@ -207,7 +144,7 @@
 							</Button>
 
 							<button class="mr-2 text-yellow-500" on:click={() => editTodo(todo)}>✏️</button>
-							<button class="text-red-500" on:click={() => deleteTodo(todo.id)}>❌</button>
+							<button class="text-red-500" on:click={() => deleteTodo(todo.id, todos)}>❌</button>
 						</div>
 					</div>
 					{#if editingTodo?.id === todo.id}
@@ -264,7 +201,7 @@
 									type="button"
 									class="rounded bg-gray-500 p-2 font-bold text-white"
 									on:click={() => {
-										editingTodo = null; // Annuler l'édition
+										editingTodo = null;
 									}}
 								>
 									Annuler
