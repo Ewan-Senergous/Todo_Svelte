@@ -10,13 +10,73 @@
 	export let onToggle: (id: number) => void;
 	export let onSave: () => void;
 	export let onCancel: () => void;
+
+	// Variables pour gérer le glisser-déposer
+	let draggedIndex: number | null = null;
+	let overIndex: number | null = null;
+
+	// Début du glisser
+	const handleDragStart = (index: number) => {
+		draggedIndex = index;
+	};
+
+	// Permet le drop
+	const handleDragOver = (event: DragEvent, index: number) => {
+		event.preventDefault(); // Important pour permettre le drop
+		overIndex = index;
+	};
+
+	// Gestion du drop
+	const handleDrop = () => {
+		if (draggedIndex !== null && overIndex !== null && draggedIndex !== overIndex) {
+			const updatedTodos = [...filteredTodos];
+			const [movedTodo] = updatedTodos.splice(draggedIndex, 1);
+			updatedTodos.splice(overIndex, 0, movedTodo);
+			filteredTodos = updatedTodos;
+
+			// Sauvegarder l'ordre via une API si nécessaire
+			saveTaskOrder();
+		}
+
+		draggedIndex = null;
+		overIndex = null;
+	};
+
+	// Fonction pour sauvegarder l'ordre
+	const saveTaskOrder = async () => {
+		try {
+			const response = await fetch('/api/todos', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ todos: filteredTodos })
+			});
+			if (!response.ok) {
+				console.error("Erreur lors de la sauvegarde de l'ordre:", await response.json());
+			}
+		} catch (error) {
+			console.error('Erreur réseau lors de la sauvegarde:', error);
+		}
+	};
+
+	// Classe dynamique pour l'élément en cours de glisser ou survolé
+	const getDragClass = (index: number) => {
+		if (index === draggedIndex) return 'dragging';
+		if (index === overIndex) return 'drag-over';
+		return '';
+	};
 </script>
 
 <div class="rounded border border-[#6c7280] bg-white p-4">
 	<ul class="space-y-4">
-		{#each filteredTodos as todo (todo.id)}
+		{#each filteredTodos as todo, index (todo.id)}
 			<li
-				class="flex flex-col space-y-2 rounded bg-gray-100 p-4 shadow"
+				draggable="true"
+				on:dragstart={() => handleDragStart(index)}
+				on:dragover={(e) => handleDragOver(e, index)}
+				on:drop={handleDrop}
+				class="flex cursor-move flex-col space-y-2 rounded bg-gray-100 p-4 shadow {getDragClass(
+					index
+				)}"
 				in:slide={{ duration: 300 }}
 				out:fade={{ duration: 200 }}
 			>
@@ -122,3 +182,19 @@
 		{/each}
 	</ul>
 </div>
+
+<style>
+	li[draggable='true'] {
+		cursor: grab;
+	}
+
+	li.dragging {
+		opacity: 0.5;
+		transform: scale(1.02);
+	}
+
+	li.drag-over {
+		border: 2px dashed #a1a1aa;
+		background-color: #e5e7eb;
+	}
+</style>
