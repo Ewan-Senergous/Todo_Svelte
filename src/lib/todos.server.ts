@@ -82,6 +82,17 @@ class TodoService {
 		return { items, total, page, size: take, pages: Math.ceil(total / take) };
 	}
 
+	// Nouvelle méthode : Recherche par titre
+	async searchByTitle(title: string): Promise<Todo[]> {
+		return db.todo.findMany({
+			where: {
+				title: {
+					contains: title // Recherche partielle
+				}
+			}
+		});
+	}
+
 	async createFromFakeHolder(): Promise<void> {
 		try {
 			const response = await fetch('https://jsonplaceholder.typicode.com/todos');
