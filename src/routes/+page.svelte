@@ -233,9 +233,12 @@
 				>
 					<div class="flex items-start justify-between">
 						<div>
-							<h3 class="text-lg font-semibold">{todo.title}</h3>
+							<h3 class="text-sm font-bold">Titre : {todo.title}</h3>
+
 							{#if todo.description}
-								<p class="text-sm text-gray-600">{todo.description}</p>
+								<p class="text-sm">
+									<strong>Description : </strong>&nbsp;{todo.description}
+								</p>
 							{/if}
 
 							<p class="flex items-center space-x-2 text-sm">
@@ -315,7 +318,20 @@
 										: 'Non définie'}
 								</p>
 							</div>
-							<button type="submit" class="rounded bg-blue-500 p-2 text-white">Enregistrer</button>
+							<div class="flex space-x-4">
+								<button type="submit" class="rounded bg-blue-500 p-2 font-bold text-white"
+									>Enregistrer</button
+								>
+								<button
+									type="button"
+									class="rounded bg-gray-500 p-2 font-bold text-white"
+									on:click={() => {
+										editingTodo = null; // Annuler l'édition
+									}}
+								>
+									Annuler
+								</button>
+							</div>
 						</form>
 					{/if}
 				</li>
