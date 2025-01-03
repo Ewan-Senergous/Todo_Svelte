@@ -7,6 +7,7 @@
 	import { todos, toggleCompletion, deleteTodo, updateTodo } from '$lib/components/todoService';
 	import { goto } from '$app/navigation';
 	import type { Todo } from '$lib/todoSchema';
+	import { Button } from 'flowbite-svelte';
 
 	let filteredTodos = writable<Todo[]>([]);
 	let editingTodo: Todo | null = null;
@@ -59,13 +60,14 @@
 			on:input={searchTodos}
 			class="w-1/2 rounded border p-2"
 		/>
-		<button
+		<Button
+			color="green"
+			class="flex items-center space-x-2 font-bold text-white"
 			on:click={navigateToCreate}
-			class="flex items-center space-x-2 rounded bg-green-500 px-4 py-2 font-bold text-white"
 		>
 			<span class="text-xl font-extrabold text-yellow-300">+</span>
 			<span>Créer une tâche</span>
-		</button>
+		</Button>
 	</div>
 
 	<Filter {todos} bind:filteredTodos />

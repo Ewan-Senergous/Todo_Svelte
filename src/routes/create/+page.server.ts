@@ -4,6 +4,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions } from '@sveltejs/kit';
 import { CreateTodoSchema } from '$lib/todoSchema';
 import { todoService } from '$lib/todos.server';
+import { redirect } from '@sveltejs/kit';
 
 export const load = (async () => {
 	const form = await superValidate(zod(CreateTodoSchema));
@@ -11,7 +12,8 @@ export const load = (async () => {
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-	default: async ({ request }) => {
+	createTodo: async ({ request }) => {
+		// Valider les données reçues du formulaire
 		const form = await superValidate(request, zod(CreateTodoSchema));
 		if (!form.valid) {
 			return fail(400, { form });
@@ -25,6 +27,6 @@ export const actions: Actions = {
 			dueDate: form.data.dueDate ?? null
 		});
 
-		return { form };
+		throw redirect(303, '/');
 	}
 };
