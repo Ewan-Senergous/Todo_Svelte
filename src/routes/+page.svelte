@@ -3,7 +3,7 @@
 	import { writable, derived } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { fade, slide } from 'svelte/transition';
-	import { Button } from 'flowbite-svelte'; // Import Flowbite-Svelte
+	import { Button } from 'flowbite-svelte';
 
 	// Interface pour représenter une tâche
 	interface Todo {
