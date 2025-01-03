@@ -1,65 +1,41 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import { goto } from '$app/navigation';
-	import { fade, slide } from 'svelte/transition';
-	import { Button } from 'flowbite-svelte';
+	import { fade } from 'svelte/transition';
 	import Filter from '$lib/components/Filter.svelte';
+	import TodoList from '$lib/components/TodoList.svelte';
+	import { todos, toggleCompletion, deleteTodo, updateTodo } from '$lib/components/todoService';
+	import { goto } from '$app/navigation';
 	import type { Todo } from '$lib/todoSchema';
-	import { todos, toggleCompletion, deleteTodo } from '$lib/components/todoService';
 
 	let filteredTodos = writable<Todo[]>([]);
 	let editingTodo: Todo | null = null;
+	let searchTerm = '';
 
 	const editTodo = (todo: Todo) => {
 		editingTodo = { ...todo };
 	};
 
-	const updateTodo = async () => {
+	const saveTodo = async () => {
 		if (editingTodo) {
-			try {
-				const formattedTodo = {
-					...editingTodo,
-					dueDate: editingTodo.dueDate ? new Date(editingTodo.dueDate).toISOString() : null
-				};
-
-				const response = await fetch('/api/todos', {
-					method: 'PATCH',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify(formattedTodo)
-				});
-
-				if (response.ok) {
-					const updatedTodo = await response.json();
-					todos.update((current) =>
-						current.map((todo) => (todo.id === updatedTodo.id ? updatedTodo : todo))
-					);
-					editingTodo = null;
-				} else {
-					console.error('Erreur lors de la mise à jour:', await response.json());
-				}
-			} catch (error) {
-				console.error('Erreur réseau lors de la mise à jour:', error);
-			}
+			await updateTodo(editingTodo, todos);
+			editingTodo = null;
 		}
 	};
 
-	const navigateToCreate = () => {
-		goto('/create');
+	const cancelEdit = () => {
+		editingTodo = null;
 	};
 
-	let searchTerm = '';
+	const navigateToCreate = () => goto('/create');
 
 	const searchTodos = async () => {
 		try {
 			const response = await fetch(`/api/todos?title=${encodeURIComponent(searchTerm)}`);
 			const data = await response.json();
 
-			if (response.ok) {
-				todos.set(data);
-			} else {
-				console.error('Erreur lors de la recherche :', data.error);
-			}
+			if (response.ok) todos.set(data);
+			else console.error('Erreur lors de la recherche :', data.error);
 		} catch (error) {
 			console.error('Erreur réseau lors de la recherche :', error);
 		}
@@ -68,9 +44,7 @@
 	onMount(() => {
 		fetch('/api/todos')
 			.then((response) => response.json())
-			.then((data: Todo[]) => {
-				todos.set(data);
-			});
+			.then((data: Todo[]) => todos.set(data));
 	});
 </script>
 
@@ -80,138 +54,32 @@
 	<div class="mb-6 flex items-center justify-between">
 		<input
 			type="text"
-			placeholder="Rechercher une todo..."
+			placeholder="Rechercher une tâche..."
 			bind:value={searchTerm}
 			on:input={searchTodos}
 			class="w-1/2 rounded border p-2"
 		/>
-		<Button
-			color="green"
-			class="flex items-center space-x-2 font-bold text-white"
+		<button
 			on:click={navigateToCreate}
+			class="flex items-center space-x-2 rounded bg-green-500 px-4 py-2 font-bold text-white"
 		>
 			<span class="text-xl font-extrabold text-yellow-300">+</span>
 			<span>Créer une tâche</span>
-		</Button>
+		</button>
 	</div>
 
 	<Filter {todos} bind:filteredTodos />
 
-	<section class="rounded border border-[#6c7280] bg-white p-4">
-		<h2 class="mb-4 text-lg font-semibold">Tâches</h2>
-		<ul class="space-y-4">
-			{#each $filteredTodos as todo (todo.id)}
-				<li
-					class="flex flex-col space-y-2 rounded bg-gray-100 p-4 shadow"
-					in:slide={{ duration: 300 }}
-					out:fade={{ duration: 200 }}
-				>
-					<div class="flex items-start justify-between">
-						<div>
-							<h3 class="text-sm font-bold">Titre : {todo.title}</h3>
-
-							{#if todo.description}
-								<p class="text-sm">
-									<strong>Description : </strong>&nbsp;{todo.description}
-								</p>
-							{/if}
-
-							<p class="flex items-center space-x-2 text-sm">
-								<strong>Priorité :</strong>
-								<span
-									class="inline-block rounded-full px-2 py-1 text-sm font-bold capitalize text-white"
-									class:bg-green-500={todo.priority === 'low'}
-									class:bg-orange-500={todo.priority === 'medium'}
-									class:bg-red-500={todo.priority === 'high'}
-								>
-									{todo.priority}
-								</span>
-								<strong>Échéance :</strong>&nbsp;
-								{todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
-							</p>
-						</div>
-						<div class="flex space-x-2">
-							<Button
-								on:click={() => toggleCompletion(todo.id, todos)}
-								color={todo.completed ? 'green' : 'blue'}
-								class={`font-bold text-white `}
-							>
-								{#if todo.completed}
-									<span>👍 Terminé</span>
-								{:else}
-									<span>⏳ En cours</span>
-								{/if}
-							</Button>
-
-							<button class="mr-2 text-yellow-500" on:click={() => editTodo(todo)}>✏️</button>
-							<button class="text-red-500" on:click={() => deleteTodo(todo.id, todos)}>❌</button>
-						</div>
-					</div>
-					{#if editingTodo?.id === todo.id}
-						<form class="space-y-4" on:submit|preventDefault={updateTodo}>
-							<div>
-								<label for="edit-title" class="block text-sm font-medium">Titre</label>
-								<input
-									type="text"
-									id="edit-title"
-									bind:value={editingTodo.title}
-									required
-									class="w-full rounded border p-2"
-								/>
-							</div>
-							<div>
-								<label for="edit-priority" class="block text-sm font-medium">Priorité</label>
-								<select
-									id="edit-priority"
-									bind:value={editingTodo.priority}
-									class="w-full rounded border p-2"
-								>
-									<option value="low">Faible</option>
-									<option value="medium">Moyenne</option>
-									<option value="high">Élevée</option>
-								</select>
-							</div>
-							<div>
-								<label for="edit-description" class="block text-sm font-medium">Description</label>
-								<textarea
-									id="edit-description"
-									bind:value={editingTodo.description}
-									class="w-full rounded border p-2"
-								></textarea>
-							</div>
-							<div>
-								<label for="edit-dueDate" class="block text-sm font-medium">Date limite</label>
-								<input
-									type="date"
-									id="edit-dueDate"
-									bind:value={editingTodo.dueDate}
-									class="w-full rounded border p-2"
-								/>
-								<p class="mt-2 text-sm">
-									Échéance actuelle : {editingTodo.dueDate
-										? new Date(editingTodo.dueDate).toLocaleDateString('fr-FR')
-										: 'Non définie'}
-								</p>
-							</div>
-							<div class="flex space-x-4">
-								<button type="submit" class="rounded bg-blue-500 p-2 font-bold text-white"
-									>Enregistrer</button
-								>
-								<button
-									type="button"
-									class="rounded bg-gray-500 p-2 font-bold text-white"
-									on:click={() => {
-										editingTodo = null;
-									}}
-								>
-									Annuler
-								</button>
-							</div>
-						</form>
-					{/if}
-				</li>
-			{/each}
-		</ul>
+	<section>
+		<TodoList
+			filteredTodos={$filteredTodos}
+			{editingTodo}
+			onEdit={editTodo}
+			onDelete={(id) => deleteTodo(id, todos)}
+			onToggle={(id) => toggleCompletion(id, todos)}
+			onSave={saveTodo}
+			onCancel={cancelEdit}
+		/>
 	</section>
 </main>
 

@@ -40,29 +40,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-export const DELETE: RequestHandler = async ({ url }) => {
-	try {
-		const id = Number(url.searchParams.get('id'));
-
-		if (isNaN(id)) {
-			console.error('ID invalide:', id);
-			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
-		}
-
-		console.log('ID de la tâche à supprimer:', id);
-
-		await todoService.remove(id);
-
-		console.log('Tâche supprimée avec succès:', id);
-		return new Response(null, { status: 204 });
-	} catch (error) {
-		console.error('Erreur lors de la suppression de la tâche:', error);
-		return new Response(JSON.stringify({ error: 'Erreur lors de la suppression' }), {
-			status: 500
-		});
-	}
-};
-
 export const PATCH: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
@@ -82,6 +59,29 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	} catch (error) {
 		console.error('Erreur lors de la mise à jour de la tâche:', error);
 		return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour' }), {
+			status: 500
+		});
+	}
+};
+
+export const DELETE: RequestHandler = async ({ url }) => {
+	try {
+		const id = Number(url.searchParams.get('id'));
+
+		if (isNaN(id)) {
+			console.error('ID invalide:', id);
+			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
+		}
+
+		console.log('ID de la tâche à supprimer:', id);
+
+		await todoService.remove(id);
+
+		console.log('Tâche supprimée avec succès:', id);
+		return new Response(null, { status: 204 });
+	} catch (error) {
+		console.error('Erreur lors de la suppression de la tâche:', error);
+		return new Response(JSON.stringify({ error: 'Erreur lors de la suppression' }), {
 			status: 500
 		});
 	}
