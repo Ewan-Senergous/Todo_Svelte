@@ -13,7 +13,7 @@ export const filteredTodos = writable<Todo[]>([]);
 export const completedTodos = derived(todos, ($todos) => $todos.filter((todo) => todo.completed));
 
 export const toggleCompletion = async (id: number, todos: Writable<Todo[]>) => {
-	const currentTodos = get(todos); // Obtenez la valeur réelle
+	const currentTodos = get(todos); // Obtenir la valeur réelle
 	const todoToUpdate = currentTodos.find((todo) => todo.id === id);
 
 	if (todoToUpdate) {
