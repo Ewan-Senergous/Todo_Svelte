@@ -4,7 +4,9 @@ export const db = new PrismaClient();
 
 class TodoService {
 	async get(): Promise<Todo[]> {
-		return db.todo.findMany();
+		return db.todo.findMany({
+			orderBy: { order: 'asc' }
+		});
 	}
 
 	async getById(id: number): Promise<Todo | null> {
@@ -13,8 +15,16 @@ class TodoService {
 		});
 	}
 
-	async add(todo: Omit<Todo, 'id'>): Promise<Todo> {
-		return db.todo.create({ data: { ...todo } });
+	async add(todo: Omit<Todo, 'id' | 'order'>): Promise<Todo> {
+		const lastTodo = await db.todo.findFirst({
+			orderBy: { order: 'desc' }
+		});
+
+		const newOrder = lastTodo ? lastTodo.order + 1 : 0;
+
+		return db.todo.create({
+			data: { ...todo, order: newOrder }
+		});
 	}
 
 	async update(id: number, todo: Partial<Omit<Todo, 'id'>>): Promise<Todo> {
@@ -27,27 +37,6 @@ class TodoService {
 	async remove(id: number): Promise<void> {
 		await db.todo.delete({
 			where: { id }
-		});
-	}
-
-	async getByPriority(priority: Todo['priority']): Promise<Todo[]> {
-		return db.todo.findMany({
-			where: { priority }
-		});
-	}
-
-	async getCompletedTodos(): Promise<Todo[]> {
-		return db.todo.findMany({
-			where: { completed: true }
-		});
-	}
-
-	async getOverdueTodos(): Promise<Todo[]> {
-		return db.todo.findMany({
-			where: {
-				completed: false,
-				dueDate: { lt: new Date() }
-			} // Todos en retard
 		});
 	}
 
@@ -69,17 +58,27 @@ class TodoService {
 			? {
 					OR: [
 						{ title: { contains: searchTerm, mode: 'insensitive' } },
-						{ priority: { equals: searchTerm, mode: 'insensitive' } }
+						{ priority: { equals: searchTerm } }
 					]
 				}
 			: {};
 
 		const [items, total] = await Promise.all([
-			db.todo.findMany({ where, take, skip }),
+			db.todo.findMany({ where, take, skip, orderBy: { order: 'asc' } }),
 			db.todo.count({ where })
 		]);
 
 		return { items, total, page, size: take, pages: Math.ceil(total / take) };
+	}
+
+	async searchByTitle(title: string): Promise<Todo[]> {
+		return db.todo.findMany({
+			where: {
+				title: {
+					contains: title
+				}
+			}
+		});
 	}
 
 	async createFromFakeHolder(): Promise<void> {

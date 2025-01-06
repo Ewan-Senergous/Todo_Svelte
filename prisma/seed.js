@@ -9,14 +9,14 @@ async function main() {
 			description: 'Lait, Pain, Œufs, Beurre',
 			completed: false,
 			priority: 'high',
-			dueDate: new Date('2024-12-31')
+			dueDate: new Date('2025-12-31')
 		},
 		{
 			title: 'Terminer le rapport de projet',
 			description: 'Finaliser la version pour le client',
-			completed: false,
+			completed: true,
 			priority: 'medium',
-			dueDate: new Date('2024-12-29')
+			dueDate: new Date('2025-12-29')
 		}
 	];
 
