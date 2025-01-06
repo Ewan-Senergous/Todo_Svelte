@@ -36,20 +36,22 @@
 	});
 </script>
 
-<main class="container mx-auto p-6" in:fade={{ duration: 500 }}>
-	<h1 class="mb-4 text-2xl font-bold">📋 Gestion des tâches</h1>
+<main class="container mx-auto p-4 sm:p-6" in:fade={{ duration: 500 }}>
+	<h1 class="mb-4 text-lg font-bold sm:text-2xl">📋 Gestion des tâches</h1>
 
-	<div class="mb-6 flex items-center justify-between">
+	<div
+		class="mb-6 flex flex-col items-start justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0"
+	>
 		<input
 			type="text"
 			placeholder="Rechercher une tâche..."
 			bind:value={searchTerm}
 			on:input={searchTodos}
-			class="w-1/2 rounded border p-2"
+			class="w-full rounded border p-2 text-sm sm:w-1/2"
 		/>
 		<Button
 			color="green"
-			class="flex items-center space-x-2 font-bold text-white"
+			class="flex w-full items-center justify-center space-x-2 text-sm font-bold text-white sm:w-auto sm:text-base"
 			on:click={navigateToCreate}
 		>
 			<span class="text-xl font-extrabold text-yellow-300">+</span>

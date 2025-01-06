@@ -70,37 +70,50 @@
 				on:dragstart={() => handleDragStart(index)}
 				on:dragover={(e) => handleDragOver(e, index)}
 				on:drop={handleDrop}
-				class="flex cursor-move flex-col space-y-2 rounded bg-gray-100 p-4 shadow {getDragClass(
-					index
-				)}"
+				class="flex flex-col space-y-2 rounded bg-gray-100 p-4 shadow {getDragClass(index)}"
 				in:slide={{ duration: 300 }}
 				out:fade={{ duration: 200 }}
 			>
-				<div class="flex items-start justify-between">
-					<div>
+				<div
+					class="flex flex-col items-start justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0"
+				>
+					<div class="w-full sm:w-auto">
 						<h3 class="text-sm font-bold">Titre : {todo.title}</h3>
 						{#if todo.description}
 							<p class="text-sm"><strong>Description :</strong> {todo.description}</p>
 						{/if}
-						<p class="flex items-center space-x-2 text-sm">
-							<strong>Priorité :</strong>
-							<span
-								class="inline-block rounded-full px-2 py-1 text-sm font-bold capitalize text-white"
-								class:bg-green-500={todo.priority === 'low'}
-								class:bg-orange-500={todo.priority === 'medium'}
-								class:bg-red-500={todo.priority === 'high'}
-							>
-								{todo.priority}
+						<p
+							class="mt-2 flex flex-col items-start space-y-2 text-sm sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0"
+						>
+							<span class="flex items-center space-x-2">
+								<strong>Priorité :</strong>
+								<span
+									class="inline-block rounded-full px-2 py-1 text-sm font-bold capitalize text-white"
+									class:bg-green-500={todo.priority === 'low'}
+									class:bg-orange-500={todo.priority === 'medium'}
+									class:bg-red-500={todo.priority === 'high'}
+								>
+									{todo.priority}
+								</span>
 							</span>
-							<strong>Échéance :</strong>&nbsp;
-							{todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
+							<span class="flex items-center space-x-2">
+								<strong>Échéance :</strong>
+								<span>
+									{todo.dueDate
+										? new Date(todo.dueDate).toLocaleDateString('fr-FR')
+										: 'Non définie'}
+								</span>
+							</span>
 						</p>
 					</div>
-					<div class="flex items-center space-x-2">
+
+					<div
+						class="mt-2 flex w-full flex-row items-center justify-between sm:mt-0 sm:w-auto sm:flex-row sm:space-x-2"
+					>
 						<Button
 							on:click={() => onToggle(todo.id)}
 							color={todo.completed ? 'green' : 'blue'}
-							class="font-bold text-white"
+							class="w-full text-xs font-bold text-white sm:w-auto sm:text-sm"
 						>
 							{#if todo.completed}
 								<span>👍 Terminé</span>
@@ -108,13 +121,26 @@
 								<span>⏳ En cours</span>
 							{/if}
 						</Button>
-						<button on:click={() => onNavigateToEdit(todo.id)} class="font-bold text-yellow-500">
+						<button
+							on:click={() => onNavigateToEdit(todo.id)}
+							class="flex w-full items-center justify-center text-xs font-bold text-yellow-500 sm:w-auto sm:text-sm"
+						>
 							✏️
 						</button>
-						<button on:click={() => onDelete(todo.id)} class="font-bold text-red-500"> ❌ </button>
-						<form method="POST" action="?/duplicateTodo" class="inline">
+						<button
+							on:click={() => onDelete(todo.id)}
+							class="flex w-full items-center justify-center text-xs font-bold text-red-500 sm:w-auto sm:text-sm"
+						>
+							❌
+						</button>
+						<form method="POST" action="?/duplicateTodo" class="inline w-full sm:w-auto">
 							<input type="hidden" name="id" value={todo.id} />
-							<button type="submit" class="font-bold text-blue-500">🔁</button>
+							<button
+								type="submit"
+								class="flex w-full items-center justify-center text-xs font-bold text-blue-500 sm:w-auto sm:text-sm"
+							>
+								🔁
+							</button>
 						</form>
 					</div>
 				</div>
@@ -136,5 +162,21 @@
 	li.drag-over {
 		border: 2px dashed #a1a1aa;
 		background-color: #e5e7eb;
+	}
+
+	@media (max-width: 640px) {
+		li {
+			padding: 1rem;
+			font-size: 0.875rem;
+		}
+
+		.flex-row button,
+		.flex-row form button {
+			height: 40px;
+		}
+
+		li p {
+			margin-top: 1rem;
+		}
 	}
 </style>
