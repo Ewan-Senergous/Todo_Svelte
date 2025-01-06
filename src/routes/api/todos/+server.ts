@@ -43,19 +43,16 @@ export const POST: RequestHandler = async ({ request }) => {
 export const PATCH: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
+		console.log('Requête PATCH reçue :', data); // Ajoutez ce log pour déboguer
 
-		// Vérifier si c'est une mise à jour de l'ordre des tâches
 		if (Array.isArray(data.todos)) {
-			// Mettre à jour l'ordre des tâches
 			for (const [index, todo] of data.todos.entries()) {
 				await todoService.update(todo.id, { order: index });
 			}
-
 			console.log('Ordre des tâches mis à jour avec succès');
 			return new Response(JSON.stringify({ message: 'Ordre mis à jour' }), { status: 200 });
 		}
 
-		// Sinon, mettre à jour une tâche spécifique
 		const id = data.id;
 
 		if (!id || isNaN(Number(id))) {
@@ -70,7 +67,7 @@ export const PATCH: RequestHandler = async ({ request }) => {
 
 		return new Response(JSON.stringify(updatedTodo), { status: 200 });
 	} catch (error) {
-		console.error("Erreur lors de la mise à jour de la tâche ou de l'ordre:", error);
+		console.error('Erreur lors de la mise à jour de la tâche :', error);
 		return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour' }), {
 			status: 500
 		});

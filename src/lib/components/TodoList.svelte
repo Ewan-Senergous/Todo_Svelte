@@ -1,32 +1,29 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
+	import { goto } from '$app/navigation';
 	import type { Todo } from '$lib/todoSchema';
 	import { Button } from 'flowbite-svelte';
 
 	export let filteredTodos: Todo[] = [];
 	export let editingTodo: Todo | null = null;
-	export let onEdit: (todo: Todo) => void;
+	export let onNavigateToEdit: (id: number) => void;
 	export let onDelete: (id: number) => void;
 	export let onToggle: (id: number) => void;
 	export let onSave: () => void;
 	export let onCancel: () => void;
 
-	// Variables pour gérer le glisser-déposer
 	let draggedIndex: number | null = null;
 	let overIndex: number | null = null;
 
-	// Début du glisser
 	const handleDragStart = (index: number) => {
 		draggedIndex = index;
 	};
 
-	// Permet le drop
 	const handleDragOver = (event: DragEvent, index: number) => {
-		event.preventDefault(); // Important pour permettre le drop
+		event.preventDefault();
 		overIndex = index;
 	};
 
-	// Gestion du drop
 	const handleDrop = () => {
 		if (draggedIndex !== null && overIndex !== null && draggedIndex !== overIndex) {
 			const updatedTodos = [...filteredTodos];
@@ -34,7 +31,6 @@
 			updatedTodos.splice(overIndex, 0, movedTodo);
 			filteredTodos = updatedTodos;
 
-			// Sauvegarder l'ordre via une API si nécessaire
 			saveTaskOrder();
 		}
 
@@ -42,7 +38,6 @@
 		overIndex = null;
 	};
 
-	// Fonction pour sauvegarder l'ordre
 	const saveTaskOrder = async () => {
 		try {
 			const response = await fetch('/api/todos', {
@@ -58,11 +53,14 @@
 		}
 	};
 
-	// Classe dynamique pour l'élément en cours de glisser ou survolé
 	const getDragClass = (index: number) => {
 		if (index === draggedIndex) return 'dragging';
 		if (index === overIndex) return 'drag-over';
 		return '';
+	};
+
+	const navigateToEdit = (id: number) => {
+		goto(`/${id}`);
 	};
 </script>
 
@@ -155,11 +153,11 @@
 								{todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('fr-FR') : 'Non définie'}
 							</p>
 						</div>
-						<div class="flex space-x-2">
+						<div class="flex items-center space-x-2">
 							<Button
 								on:click={() => onToggle(todo.id)}
 								color={todo.completed ? 'green' : 'blue'}
-								class={`font-bold text-white `}
+								class="font-bold text-white"
 							>
 								{#if todo.completed}
 									<span>👍 Terminé</span>
@@ -167,13 +165,15 @@
 									<span>⏳ En cours</span>
 								{/if}
 							</Button>
-							<button on:click={() => onEdit(todo)} class="font-bold text-yellow-500">✏️</button>
-							<button on:click={() => onDelete(todo.id)} class="font-bold text-red-500">❌</button>
-							<form method="POST" action="?/duplicateTodo">
+							<button on:click={() => onNavigateToEdit(todo.id)} class="font-bold text-yellow-500">
+								✏️
+							</button>
+							<button on:click={() => onDelete(todo.id)} class="font-bold text-red-500">
+								❌
+							</button>
+							<form method="POST" action="?/duplicateTodo" class="inline">
 								<input type="hidden" name="id" value={todo.id} />
-								<Button type="submit" color={'purple'} class={`font-bold text-white `}>
-									🔄 Dupliquer
-								</Button>
+								<button type="submit" class="font-bold text-blue-500">🔁</button>
 							</form>
 						</div>
 					</div>

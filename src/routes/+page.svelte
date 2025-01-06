@@ -13,8 +13,8 @@
 	let editingTodo: Todo | null = null;
 	let searchTerm = '';
 
-	const editTodo = (todo: Todo) => {
-		editingTodo = { ...todo };
+	const navigateToEdit = (id: number) => {
+		goto(`/${id}`);
 	};
 
 	const saveTodo = async () => {
@@ -76,7 +76,7 @@
 		<TodoList
 			filteredTodos={$filteredTodos}
 			{editingTodo}
-			onEdit={editTodo}
+			onNavigateToEdit={navigateToEdit}
 			onDelete={(id) => deleteTodo(id, todos)}
 			onToggle={(id) => toggleCompletion(id, todos)}
 			onSave={saveTodo}
