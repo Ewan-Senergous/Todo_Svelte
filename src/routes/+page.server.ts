@@ -34,7 +34,6 @@ export const actions: Actions = {
 		return { form };
 	},
 
-	// Nouvelle action pour dupliquer une tâche
 	duplicateTodo: async ({ request }) => {
 		const formData = await request.formData();
 		const id = Number(formData.get('id'));
@@ -43,22 +42,19 @@ export const actions: Actions = {
 			return fail(400, { error: "L'ID de la tâche est invalide." });
 		}
 
-		// Récupérer la tâche à dupliquer
 		const originalTodo = await todoService.getById(id);
 		if (!originalTodo) {
 			return fail(404, { error: 'Tâche introuvable.' });
 		}
 
-		// Créer une nouvelle tâche en copiant les données existantes
 		const duplicatedTodo = {
 			...originalTodo,
-			id: undefined, // Laisser l'ID undefined pour qu'il soit généré automatiquement
-			title: originalTodo.title + ' (Copie)' // Modifier le titre pour indiquer que c'est une copie
+			id: undefined,
+			title: originalTodo.title + ' (Copie)'
 		};
 
 		await todoService.add(duplicatedTodo);
 
-		// Rediriger vers la page principale après duplication
 		throw redirect(303, '/');
 	}
 };
