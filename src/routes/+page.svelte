@@ -10,22 +10,10 @@
 	import { Button } from 'flowbite-svelte';
 
 	let filteredTodos = writable<Todo[]>([]);
-	let editingTodo: Todo | null = null;
 	let searchTerm = '';
 
 	const navigateToEdit = (id: number) => {
 		goto(`/${id}`);
-	};
-
-	const saveTodo = async () => {
-		if (editingTodo) {
-			await updateTodo(editingTodo, todos);
-			editingTodo = null;
-		}
-	};
-
-	const cancelEdit = () => {
-		editingTodo = null;
 	};
 
 	const navigateToCreate = () => goto('/create');
@@ -34,7 +22,6 @@
 		try {
 			const response = await fetch(`/api/todos?title=${encodeURIComponent(searchTerm)}`);
 			const data = await response.json();
-
 			if (response.ok) todos.set(data);
 			else console.error('Erreur lors de la recherche :', data.error);
 		} catch (error) {
@@ -75,12 +62,9 @@
 	<section>
 		<TodoList
 			filteredTodos={$filteredTodos}
-			{editingTodo}
 			onNavigateToEdit={navigateToEdit}
 			onDelete={(id) => deleteTodo(id, todos)}
 			onToggle={(id) => toggleCompletion(id, todos)}
-			onSave={saveTodo}
-			onCancel={cancelEdit}
 		/>
 	</section>
 </main>

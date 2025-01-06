@@ -12,8 +12,7 @@ export const load = (async ({ params }) => {
 	} // Récupérer l'ID du todo
 
 	const form = await superValidate(zod(UpdateTodoSchema));
-	const todo = await todoService.getById(todoId); // Récupérer les données du todo
-
+	const todo = await todoService.getById(todoId);
 	return { form, todo };
 }) satisfies PageServerLoad;
 
@@ -22,7 +21,7 @@ export const actions: Actions = {
 		const form = await superValidate(request, zod(UpdateTodoSchema));
 		if (!form.valid) {
 			return fail(400, { form });
-		} // Validation des données
+		}
 
 		const { id, ...data } = form.data;
 		await todoService.update(id, data);

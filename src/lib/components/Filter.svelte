@@ -47,9 +47,9 @@
 			<label for="filter-priority" class="block text-sm font-medium">Priorité</label>
 			<select id="filter-priority" bind:value={$filterPriority} class="w-full rounded border p-2">
 				<option value="all">Toutes</option>
-				<option value="low">Faible</option>
-				<option value="medium">Moyenne</option>
-				<option value="high">Élevée</option>
+				<option value="low">Low</option>
+				<option value="medium">Medium</option>
+				<option value="high">High</option>
 			</select>
 		</div>
 
