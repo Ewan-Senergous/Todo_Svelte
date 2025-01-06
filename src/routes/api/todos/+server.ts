@@ -30,7 +30,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		const todo = await todoService.add(data);
-		console.log('Tâche créée avec succès:', todo);
 		return new Response(JSON.stringify(todo), { status: 201 });
 	} catch (error) {
 		console.error('Erreur lors de la création de la tâche:', error);
@@ -43,7 +42,6 @@ export const POST: RequestHandler = async ({ request }) => {
 export const PATCH: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
-		console.log('Requête PATCH reçue :', data); // Ajoutez ce log pour déboguer
 
 		if (Array.isArray(data.todos)) {
 			for (const [index, todo] of data.todos.entries()) {
@@ -83,11 +81,8 @@ export const DELETE: RequestHandler = async ({ url }) => {
 			return new Response(JSON.stringify({ error: 'ID invalide' }), { status: 400 });
 		}
 
-		console.log('ID de la tâche à supprimer:', id);
-
 		await todoService.remove(id);
 
-		console.log('Tâche supprimée avec succès:', id);
 		return new Response(null, { status: 204 });
 	} catch (error) {
 		console.error('Erreur lors de la suppression de la tâche:', error);
