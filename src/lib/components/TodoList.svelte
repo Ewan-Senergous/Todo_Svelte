@@ -44,7 +44,7 @@
 				body: JSON.stringify({ todos: filteredTodos })
 			});
 			if (!response.ok) {
-				console.error("Erreur lors de la sauvegarde de l'ordre:", await response.json());
+				console.error('Erreur lors de la sauvegarde de l\'ordre:', await response.json());
 			}
 		} catch (error) {
 			console.error('Erreur réseau lors de la sauvegarde:', error);
@@ -121,26 +121,26 @@
 								<span>⏳ En cours</span>
 							{/if}
 						</Button>
-						<button
-							on:click={() => onNavigateToEdit(todo.id)}
-							class="flex w-full items-center justify-center text-xs font-bold text-yellow-500 sm:w-auto sm:text-sm"
+						<Button
+							onclick={() => onNavigateToEdit(todo.id)}
+							color="alternative"
 						>
 							✏️
-						</button>
-						<button
-							on:click={() => onDelete(todo.id)}
-							class="flex w-full items-center justify-center text-xs font-bold text-red-500 sm:w-auto sm:text-sm"
+						</Button>
+						<Button
+							onclick={() => onDelete(todo.id)}
+							color="alternative"
 						>
 							❌
-						</button>
+						</Button>
 						<form method="POST" action="?/duplicateTodo" class="inline w-full sm:w-auto">
 							<input type="hidden" name="id" value={todo.id} />
-							<button
+							<Button
 								type="submit"
-								class="flex w-full items-center justify-center text-xs font-bold text-blue-500 sm:w-auto sm:text-sm"
+								color="alternative"
 							>
 								🔁
-							</button>
+							</Button>
 						</form>
 					</div>
 				</div>
@@ -150,33 +150,33 @@
 </div>
 
 <style>
-	li[draggable='true'] {
-		cursor: grab;
-	}
+    li[draggable='true'] {
+        cursor: grab;
+    }
 
-	li.dragging {
-		opacity: 0.5;
-		transform: scale(1.02);
-	}
+    li.dragging {
+        opacity: 0.5;
+        transform: scale(1.02);
+    }
 
-	li.drag-over {
-		border: 2px dashed #a1a1aa;
-		background-color: #e5e7eb;
-	}
+    li.drag-over {
+        border: 2px dashed #a1a1aa;
+        background-color: #e5e7eb;
+    }
 
-	@media (max-width: 640px) {
-		li {
-			padding: 1rem;
-			font-size: 0.875rem;
-		}
+    @media (max-width: 640px) {
+        li {
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
 
-		.flex-row button,
-		.flex-row form button {
-			height: 40px;
-		}
+        .flex-row button,
+        .flex-row form button {
+            height: 40px;
+        }
 
-		li p {
-			margin-top: 1rem;
-		}
-	}
+        li p {
+            margin-top: 1rem;
+        }
+    }
 </style>
